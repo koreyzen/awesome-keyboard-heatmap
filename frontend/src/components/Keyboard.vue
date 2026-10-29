@@ -324,7 +324,9 @@ const startPermissionWatch = () => {
             <path d="M12 4l8 8h-5v8H9v-8H4z" />
           </svg>
           <span v-else>{{ key.Label }}</span>
-          <KeyTooltip v-if="hoverKey === key" :data="key" />
+          <Transition name="key-tooltip">
+            <KeyTooltip v-if="hoverKey === key" :data="key" />
+          </Transition>
         </div>
       </div>
     </div>

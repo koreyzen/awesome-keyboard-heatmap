@@ -10,6 +10,16 @@ defineProps({ data: Object })
 </script>
 
 <style scoped>
+.key-tooltip-enter-active,
+.key-tooltip-leave-active {
+    transition: opacity 0.3s ease;
+}
+
+.key-tooltip-enter-from,
+.key-tooltip-leave-to {
+    opacity: 0;
+}
+
 .tooltip {
     position: absolute;
     bottom: calc(100% + 8px);
