@@ -152,6 +152,7 @@ onMounted(async () => {
     const positioned = createKeyboardGeometry(result)
     geometry.value = { columns: positioned.columns, rows: positioned.rows }
     layout.value = positioned.keys.map(key => ({ ...key, Hot: 0, Count: 0 }))
+    applyRange()
     window.addEventListener("blur", handleBlur)
   }).catch((err) => {
     console.log(err)
@@ -296,7 +297,7 @@ const startPermissionWatch = () => {
     <div class="action-btn count-toggle" :class="{ selected: countsEnabled }" @click="toggleCounts">
       次数图
     </div>
-    <div class="date-range" v-if="statsEnabled">
+    <div class="date-range">
       <span class="total-count">{{ selectedRange }}共 {{ totalCount.toLocaleString() }} 次</span>
       <div v-for="range in ranges" :key="range" class="action-btn"
         :class="{ selected: selectedRange === range }" @click="selectRange(range)">
