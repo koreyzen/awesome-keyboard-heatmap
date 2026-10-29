@@ -424,7 +424,7 @@ func GetKeyLayout(l LayoutType) Layout {
 				{Code: "NumPad1", Label: "1", W: 1},
 				{Code: "NumPad2", Label: "2", W: 1},
 				{Code: "NumPad3", Label: "3", W: 1},
-				{Code: "NumPad Enter", Label: "⏎", W: 1},
+				{Code: "NumPad Enter", Label: "⏎", W: 1, H: 2},
 			},
 			{
 				{Code: "Fn", Label: "Fn", W: 1},
@@ -442,7 +442,7 @@ func GetKeyLayout(l LayoutType) Layout {
 				{Code: "None", Label: "", W: 0.2},
 				{Code: "NumPad0", Label: "0", W: 2},
 				{Code: "NumPad .", Label: ".", W: 1},
-				{Code: "NumPad Enter", Label: "⏎", W: 1},
+				{Code: "None", Label: "", W: 1},
 			},
 		}
 	default:

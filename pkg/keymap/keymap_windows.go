@@ -373,7 +373,7 @@ func GetKeyLayout(l LayoutType) Layout {
 				{Code: "NumPad7", Label: "7", W: 1},
 				{Code: "NumPad8", Label: "8", W: 1},
 				{Code: "NumPad9", Label: "9", W: 1},
-				{Code: "NumPad +", Label: "+", W: 1},
+				{Code: "NumPad +", Label: "+", W: 1, H: 2},
 			},
 			{
 				{Code: "CapsLock", Label: "⇪", W: 1.75},
@@ -397,7 +397,7 @@ func GetKeyLayout(l LayoutType) Layout {
 				{Code: "NumPad4", Label: "4", W: 1},
 				{Code: "NumPad5", Label: "5", W: 1},
 				{Code: "NumPad6", Label: "6", W: 1},
-				{Code: "NumPad +", Label: "+", W: 1},
+				{Code: "None", Label: "", W: 1},
 			},
 			{
 				{Code: "Shift", Label: "⇧", W: 2.25},
@@ -420,7 +420,7 @@ func GetKeyLayout(l LayoutType) Layout {
 				{Code: "NumPad1", Label: "1", W: 1},
 				{Code: "NumPad2", Label: "2", W: 1},
 				{Code: "NumPad3", Label: "3", W: 1},
-				{Code: "NumPad Enter", Label: "⏎", W: 1},
+				{Code: "NumPad Enter", Label: "⏎", W: 1, H: 2},
 			},
 			{
 				{Code: "Ctrl", Label: "Ctrl", W: 1.25},
@@ -438,7 +438,7 @@ func GetKeyLayout(l LayoutType) Layout {
 				{Code: "None", Label: "", W: 0.2},
 				{Code: "NumPad0", Label: "0", W: 2},
 				{Code: "NumPad .", Label: ".", W: 1},
-				{Code: "NumPad Enter", Label: "⏎", W: 1},
+				{Code: "None", Label: "", W: 1},
 			},
 		}
 	default:

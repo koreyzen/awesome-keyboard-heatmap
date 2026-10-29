@@ -12,6 +12,7 @@ type Key struct {
 	Code  string
 	Label string
 	W     float64
+	H     int `json:",omitempty"`
 }
 
 type LayoutType string

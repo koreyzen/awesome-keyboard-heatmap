@@ -70,16 +70,24 @@ const keyStyleCache = computed(() => {
     fontSize: `${fontSize}px`,
     margin: `${gap}px`,
     width: size,
-    height: size,
+    height: `calc(100% * var(--key-rows, 1) - ${gap * 2}px)`,
   }
 })
 
 // 热力图作为键盘上的可切换叠层
 const heatmapEnabled = ref(false)
+const countsEnabled = ref(false)
+const statsEnabled = computed(() => heatmapEnabled.value || countsEnabled.value)
+const totalCount = computed(() => layout.value.flat().reduce((total, key) => total + key.Count, 0))
 const toggleHeatmap = () => {
   heatmapEnabled.value = !heatmapEnabled.value
   hoverKey.value = null
-  if (heatmapEnabled.value) applyRange()
+  if (heatmapEnabled.value && !countsEnabled.value) applyRange()
+}
+const toggleCounts = () => {
+  countsEnabled.value = !countsEnabled.value
+  hoverKey.value = null
+  if (countsEnabled.value && !heatmapEnabled.value) applyRange()
 }
 // 快捷日期范围，周一为每周第一天
 const ranges = ['今日', '昨日', '本周', '上周', '历史全部']
@@ -139,7 +147,7 @@ const applyRange = () => {
 // 悬停提示固定在当前按键上方
 const hoverKey = ref(null)
 const onKeyEnter = (key) => {
-  if (heatmapEnabled.value) hoverKey.value = key
+  if (statsEnabled.value) hoverKey.value = key
 }
 const onKeyLeave = () => {
   hoverKey.value = null
@@ -300,9 +308,10 @@ const startPermissionWatch = () => {
       <div v-for="key in row" :key="key.Code" class="key-content" :style="getKeyContentStyle(key)"
         :ref="el => setStandardKeyRef(el, key)">
         <div class="key" :class="{ active: activeKeys.has(key.Code), hot: heatmapEnabled && key.Hot > 0.6 }"
-          :style="key.Code === 'None' ? null : [keyStyleCache, { '--t': heatmapEnabled ? key.Hot : 0 }]"
+          :style="key.Code === 'None' ? null : [keyStyleCache, { '--t': heatmapEnabled ? key.Hot : 0, '--key-rows': key.H || 1 }]"
           @mouseenter="onKeyEnter(key)" @mouseleave="onKeyLeave">
-          <svg v-if="key.Code === 'Enter' || key.Code === 'NumPad Enter'" class="key-icon"
+          <span v-if="countsEnabled && key.Code !== 'None'" class="key-count">{{ key.Count }}</span>
+          <svg v-else-if="key.Code === 'Enter' || key.Code === 'NumPad Enter'" class="key-icon"
             viewBox="0 0 24 24" role="img" :aria-label="key.Code">
             <path d="M19 5v8H5m5-5-5 5 5 5" />
           </svg>
@@ -320,7 +329,11 @@ const startPermissionWatch = () => {
     <div class="action-btn" :class="{ selected: heatmapEnabled }" @click="toggleHeatmap">
       热力图
     </div>
-    <div class="date-range" v-if="heatmapEnabled">
+    <div class="action-btn count-toggle" :class="{ selected: countsEnabled }" @click="toggleCounts">
+      次数图
+    </div>
+    <div class="date-range" v-if="statsEnabled">
+      <span class="total-count">{{ selectedRange }}共 {{ totalCount.toLocaleString() }} 次</span>
       <div v-for="range in ranges" :key="range" class="action-btn"
         :class="{ selected: selectedRange === range }" @click="selectRange(range)">
         {{ range }}
@@ -398,6 +411,22 @@ const startPermissionWatch = () => {
   display: flex;
   align-items: center;
   width: 100%;
+}
+
+.count-toggle {
+  margin-left: 12px;
+}
+
+.total-count {
+  margin-right: 8px;
+  font-size: 13px;
+  color: #777;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.key-count {
+  font-variant-numeric: tabular-nums;
 }
 
 .date-range {
