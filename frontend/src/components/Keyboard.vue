@@ -430,18 +430,6 @@ const startPermissionWatch = () => {
   border-radius: 0 0 10px 10px;
 }
 
-.split-top .key::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -0.5px;
-  height: 1px;
-  background: #c8cbd0;
-  z-index: 1;
-  pointer-events: none;
-}
-
 :is(.split-top, .split-bottom) .key:is(:active, .active) {
   transform: none !important;
 }
