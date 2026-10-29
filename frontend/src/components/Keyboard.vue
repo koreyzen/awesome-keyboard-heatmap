@@ -243,6 +243,12 @@ const startPermissionWatch = () => {
       </div>
     </div>
     <div class="status-right">
+      <div class="theme-palette" role="group" aria-label="热力主题色">
+        <button v-for="item in themes" :key="item.name" class="theme-swatch"
+          :style="{ '--swatch': `rgb(${item.rgb.join(', ')})` }"
+          :aria-label="`${item.name}色主题`" :aria-pressed="theme.name === item.name"
+          @click="selectTheme(item)"></button>
+      </div>
       <div class="status-item">
         <div class="dot-wrapper">
           <span class="dot" :class="{ ok: bootStartup, bad: !bootStartup }"></span>
@@ -269,12 +275,6 @@ const startPermissionWatch = () => {
           </div>
         </div>
         <span class="label">监听</span>
-      </div>
-      <div class="theme-palette" role="group" aria-label="热力主题色">
-        <button v-for="item in themes" :key="item.name" class="theme-swatch"
-          :style="{ '--swatch': `rgb(${item.rgb.join(', ')})` }"
-          :aria-label="`${item.name}色主题`" :aria-pressed="theme.name === item.name"
-          @click="selectTheme(item)"></button>
       </div>
     </div>
   </div>
@@ -586,7 +586,7 @@ const startPermissionWatch = () => {
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-left: 8px;
+  margin-right: 8px;
 }
 
 .theme-swatch {
@@ -606,9 +606,10 @@ const startPermissionWatch = () => {
   outline-offset: 2px;
 }
 
-.theme-palette:hover .theme-swatch,
+.theme-swatch:hover,
 .theme-swatch:focus-visible {
   opacity: 1;
+  filter: saturate(1.45);
 }
 
 .action-btn {
