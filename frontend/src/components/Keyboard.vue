@@ -1,8 +1,9 @@
 <script setup>
 import { Events } from "@wailsio/runtime";
-import { ref, onMounted, onBeforeUnmount, nextTick, computed } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import { GetHeatmap, GetKeyLayout, GetPermission, SetMonitorStart, GetMonitorStatus, GetBootStartup, OpenBootStartup, GetPrompt } from "../../bindings/github.com/zxc7563598/key-heat/greetservice";
 import KeyTooltip from "./KeyTooltip.vue";
+import { createKeyboardGeometry } from "../keyboardGeometry.js";
 import PromptDialog from "./PromptDialog.vue"
 
 // 当前监听状态
@@ -37,48 +38,26 @@ const openBootStartup = () => {
   })
 }
 
-// 标记基础单位的按键
-const keyHeight = ref(52)
-const standardKeyRef = ref(null)
-const setStandardKeyRef = (el, key) => {
-  if (key.W === 1 && el && !standardKeyRef.value) {
-    standardKeyRef.value = el
-  }
-}
-
 // 按键按压状态
 const activeKeys = ref(new Set())
 const handleBlur = () => {
   activeKeys.value = new Set()
 }
 
-// 按键边界范围控制
-const getKeyContentStyle = (key) => {
-  return {
-    flex: key.W,
-    height: Math.floor(keyHeight.value) + "px",
-  }
-}
-
-// 按键动态样式
-const keyStyleCache = computed(() => {
-  const h = keyHeight.value
-  const gap = Math.floor(h / 9)
-  const fontSize = Math.floor(h / 4)
-  const size = `calc(100% - ${gap * 2}px)`
-  return {
-    fontSize: `${fontSize}px`,
-    margin: `${gap}px`,
-    width: size,
-    height: `calc(100% * var(--key-rows, 1) - ${gap * 2}px)`,
-  }
+// All positions and sizes share the same standard-key coordinate system.
+const geometry = ref({ columns: 14.5, rows: 6 })
+const getKeyContentStyle = (key) => ({
+  left: `${key.X / geometry.value.columns * 100}%`,
+  top: `${key.Y / geometry.value.rows * 100}%`,
+  width: `${key.W / geometry.value.columns * 100}%`,
+  height: `${key.H / geometry.value.rows * 100}%`,
 })
 
 // 热力图作为键盘上的可切换叠层
 const heatmapEnabled = ref(false)
 const countsEnabled = ref(false)
 const statsEnabled = computed(() => heatmapEnabled.value || countsEnabled.value)
-const totalCount = computed(() => layout.value.flat().reduce((total, key) => total + key.Count, 0))
+const totalCount = computed(() => layout.value.reduce((total, key) => total + key.Count, 0))
 const toggleHeatmap = () => {
   heatmapEnabled.value = !heatmapEnabled.value
   hoverKey.value = null
@@ -123,22 +102,20 @@ const applyRange = () => {
     const values = Object.values(result)
     const max = Math.max(...values, 0)
     // 映射 + 写回
-    layout.value = layout.value.map(row =>
-      row.map(key => {
-        const raw = result[key.Code] || 0
-        const t = ref(0)
-        if (raw != 0) {
-          const logVal = Math.log(raw + 1) / Math.log(max + 1) // log 压缩
-          const normalized = Math.pow(logVal, 1) // 再轻微调整分布
-          t.value = Math.pow(normalized, 1.4) // 视觉映射
-        }
-        return {
-          ...key,
-          Hot: t.value,
-          Count: raw
-        }
-      })
-    )
+    layout.value = layout.value.map(key => {
+      const raw = result[key.Code] || 0
+      const t = ref(0)
+      if (raw != 0) {
+        const logVal = Math.log(raw + 1) / Math.log(max + 1) // log 压缩
+        const normalized = Math.pow(logVal, 1) // 再轻微调整分布
+        t.value = Math.pow(normalized, 1.4) // 视觉映射
+      }
+      return {
+        ...key,
+        Hot: t.value,
+        Count: raw
+      }
+    })
   }).catch((err) => {
     console.log("热力图获取失败", err)
   })
@@ -168,30 +145,13 @@ const getPrompt = () => {
   })
 }
 
-let observer
 const layout = ref([])
 onMounted(async () => {
   // 获取键盘布局
   GetKeyLayout("ANSI").then(async (result) => {
-    layout.value = result.map(row =>
-      row.map(key => ({
-        ...key,
-        Hot: Math.pow(0 / 100, 1.4),
-        Count: 0
-      }))
-    )
-    // 等 DOM 渲染完成
-    await nextTick()
-    // 计算按键高度
-    const el = standardKeyRef.value
-    if (!el) return
-    observer = new ResizeObserver(([entry]) => {
-      const width = entry.contentRect.width
-      if (width > 0) {
-        keyHeight.value = width
-      }
-    })
-    observer.observe(el)
+    const positioned = createKeyboardGeometry(result)
+    geometry.value = { columns: positioned.columns, rows: positioned.rows }
+    layout.value = positioned.keys.map(key => ({ ...key, Hot: 0, Count: 0 }))
     window.addEventListener("blur", handleBlur)
   }).catch((err) => {
     console.log(err)
@@ -224,7 +184,6 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
-  observer?.disconnect()
   window.removeEventListener("blur", handleBlur)
 })
 
@@ -303,15 +262,14 @@ const startPermissionWatch = () => {
       </div>
     </div>
   </div>
-  <div class="keyboard">
-    <div v-for="(row, rowIndex) in layout" :key="rowIndex" class="row">
-      <div v-for="key in row" :key="key.Code" class="key-content" :style="getKeyContentStyle(key)"
-        :ref="el => setStandardKeyRef(el, key)">
+  <div class="keyboard" :style="{ '--keyboard-columns': geometry.columns, '--keyboard-rows': geometry.rows }">
+    <div class="key-grid">
+      <div v-for="key in layout" :key="key.Code" class="key-content" :style="getKeyContentStyle(key)">
         <div class="key" :class="{ active: activeKeys.has(key.Code), hot: heatmapEnabled && key.Hot > 0.6 }"
-          :style="key.Code === 'None' ? null : [keyStyleCache, { '--t': heatmapEnabled ? key.Hot : 0, '--key-rows': key.H || 1 }]"
+          :style="{ '--t': heatmapEnabled ? key.Hot : 0 }"
           @mouseenter="onKeyEnter(key)" @mouseleave="onKeyLeave">
-          <span v-if="countsEnabled && key.Code !== 'None'" class="key-count">{{ key.Count }}</span>
-          <svg v-else-if="key.Code === 'Close'" class="key-icon"
+          <span v-if="countsEnabled" class="key-count">{{ key.Count }}</span>
+          <svg v-else-if="key.Code === 'TouchID'" class="key-icon"
             viewBox="0 0 24 24" role="img" :aria-label="key.Code">
             <circle cx="12" cy="12" r="8" />
           </svg>
@@ -356,7 +314,7 @@ const startPermissionWatch = () => {
 .keyboard {
   align-self: center;
   box-sizing: border-box;
-  width: 100%;
+  width: min(100%, calc((100vh - 2 * var(--toolbar-height) - 30px) * var(--keyboard-columns) / var(--keyboard-rows) + 30px));
   padding: 15px;
   border-radius: 24px;
   background: rgba(255, 255, 255, 0.7);
@@ -365,18 +323,26 @@ const startPermissionWatch = () => {
   margin: 0 auto;
 }
 
-.row {
-  box-sizing: border-box;
-  display: flex;
+.key-grid {
+  position: relative;
+  container-type: inline-size;
+  aspect-ratio: var(--keyboard-columns) / var(--keyboard-rows);
 }
 
 .key-content {
+  --key-unit: calc(100cqw / var(--keyboard-columns));
+  --key-gap: calc(var(--key-unit) * 0.08);
+  position: absolute;
   box-sizing: border-box;
   display: flex;
+  font-size: calc(var(--key-unit) / 4);
 }
 
 .key {
   position: relative;
+  margin: var(--key-gap);
+  width: calc(100% - 2 * var(--key-gap));
+  height: calc(100% - 2 * var(--key-gap));
   --t: 0;
   text-align: center;
   white-space: pre-wrap;

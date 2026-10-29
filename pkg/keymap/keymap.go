@@ -12,7 +12,8 @@ type Key struct {
 	Code  string
 	Label string
 	W     float64
-	H     int `json:",omitempty"`
+	H     float64 `json:",omitempty"`
+	Stack []Key   `json:",omitempty"`
 }
 
 type LayoutType string
