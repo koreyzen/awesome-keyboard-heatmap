@@ -4,7 +4,14 @@ import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import { GetHeatmap, GetKeyLayout, GetPermission, SetMonitorStart, GetMonitorStatus, GetBootStartup, OpenBootStartup, GetPrompt } from "../../bindings/github.com/zxc7563598/key-heat/greetservice";
 import KeyTooltip from "./KeyTooltip.vue";
 import { createKeyboardGeometry } from "../keyboardGeometry.js";
+import { themes, heatStyle } from "../heatColors.js";
 import PromptDialog from "./PromptDialog.vue"
+
+const theme = ref(themes.find(item => item.name === localStorage.getItem('heat-theme')) || themes[0])
+const selectTheme = (item) => {
+  theme.value = item
+  localStorage.setItem('heat-theme', item.name)
+}
 
 // 当前监听状态
 const monitor = ref(false)
@@ -263,6 +270,12 @@ const startPermissionWatch = () => {
         </div>
         <span class="label">监听</span>
       </div>
+      <div class="theme-palette" role="group" aria-label="热力主题色">
+        <button v-for="item in themes" :key="item.name" class="theme-swatch"
+          :style="{ '--swatch': `rgb(${item.rgb.join(', ')})` }"
+          :aria-label="`${item.name}色主题`" :aria-pressed="theme.name === item.name"
+          @click="selectTheme(item)"></button>
+      </div>
     </div>
   </div>
   <div class="keyboard" :style="{ '--keyboard-columns': geometry.columns, '--keyboard-rows': geometry.rows }">
@@ -270,8 +283,8 @@ const startPermissionWatch = () => {
       <div v-for="key in layout" :key="key.Code" class="key-content"
         :class="{ 'split-top': key.Code === '↑', 'split-bottom': key.Code === '↓' }"
         :style="getKeyContentStyle(key)">
-        <div class="key" :class="{ active: activeKeys.has(key.Code), hot: heatmapEnabled && key.Hot > 0.6 }"
-          :style="{ '--t': heatmapEnabled ? key.Hot : 0 }"
+        <div class="key" :class="{ active: activeKeys.has(key.Code) }"
+          :style="heatStyle(theme.rgb, heatmapEnabled ? key.Hot : 0)"
           @mouseenter="onKeyEnter(key)" @mouseleave="onKeyLeave">
           <span v-if="countsEnabled" class="key-count">{{ key.Count }}</span>
           <span v-else class="key-label">
@@ -359,8 +372,8 @@ const startPermissionWatch = () => {
   border-radius: 10px;
   justify-content: center;
   font-weight: 500;
-  background: hsl(0, calc(8% + var(--t) * 72%), calc(97% - var(--t) * 47%));
-  color: #333;
+  background: var(--heat-color);
+  color: var(--key-ink);
   box-shadow: 3px 3px 6px rgba(0, 0, 0, calc(0.08 + var(--t) * 0.12)), -3px -3px 6px rgba(255, 255, 255, calc(0.9 - var(--t) * 0.7));
   transition: transform 0.08s ease, box-shadow 0.12s ease, background 0.2s ease, color 0.2s ease;
 }
@@ -386,10 +399,6 @@ const startPermissionWatch = () => {
 .key.active {
   transform: translateY(2px) scale(0.96) !important;
   box-shadow: inset 2px 2px 5px rgba(0, 0, 0, calc(0.15 + var(--t) * 0.2)), inset -2px -2px 5px rgba(255, 255, 255, calc(0.8 - var(--t) * 0.6)) !important;
-}
-
-.key.hot {
-  color: #fff;
 }
 
 /* One keycap outline, with two independently coloured and interactive halves. */
@@ -580,7 +589,38 @@ const startPermissionWatch = () => {
 
 .status-right {
   display: flex;
+  align-items: center;
   gap: 10px;
+}
+
+.theme-palette {
+  --wails-draggable: no-drag;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;
+}
+
+.theme-swatch {
+  width: 12px;
+  height: 12px;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: var(--swatch);
+  opacity: 0.12;
+  cursor: pointer;
+  transition: opacity 0.3s ease;
+}
+
+.theme-swatch[aria-pressed="true"] {
+  outline: 1px solid var(--swatch);
+  outline-offset: 2px;
+}
+
+.theme-palette:hover .theme-swatch,
+.theme-swatch:focus-visible {
+  opacity: 1;
 }
 
 .action-btn {
