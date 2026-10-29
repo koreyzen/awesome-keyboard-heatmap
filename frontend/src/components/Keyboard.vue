@@ -267,7 +267,9 @@ const startPermissionWatch = () => {
   </div>
   <div class="keyboard" :style="{ '--keyboard-columns': geometry.columns, '--keyboard-rows': geometry.rows }">
     <div class="key-grid">
-      <div v-for="key in layout" :key="key.Code" class="key-content" :style="getKeyContentStyle(key)">
+      <div v-for="key in layout" :key="key.Code" class="key-content"
+        :class="{ 'split-top': key.Code === '↑', 'split-bottom': key.Code === '↓' }"
+        :style="getKeyContentStyle(key)">
         <div class="key" :class="{ active: activeKeys.has(key.Code), hot: heatmapEnabled && key.Hot > 0.6 }"
           :style="{ '--t': heatmapEnabled ? key.Hot : 0 }"
           @mouseenter="onKeyEnter(key)" @mouseleave="onKeyLeave">
@@ -388,6 +390,51 @@ const startPermissionWatch = () => {
 
 .key.hot {
   color: #fff;
+}
+
+/* One keycap outline, with two independently coloured and interactive halves. */
+.split-top::before {
+  content: '';
+  position: absolute;
+  top: var(--key-gap);
+  left: var(--key-gap);
+  width: calc(100% - 2 * var(--key-gap));
+  height: calc(200% - 2 * var(--key-gap));
+  border-radius: 10px;
+  box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.08), -3px -3px 6px rgba(255, 255, 255, 0.9);
+  pointer-events: none;
+}
+
+.split-top .key,
+.split-bottom .key {
+  height: calc(100% - var(--key-gap));
+  box-shadow: none;
+}
+
+.split-top .key {
+  margin-bottom: 0;
+  border-radius: 10px 10px 0 0;
+}
+
+.split-bottom .key {
+  margin-top: 0;
+  border-radius: 0 0 10px 10px;
+}
+
+.split-top .key::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -0.5px;
+  height: 1px;
+  background: #c8cbd0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+:is(.split-top, .split-bottom) .key:is(:active, .active) {
+  transform: none !important;
 }
 
 .functional {
