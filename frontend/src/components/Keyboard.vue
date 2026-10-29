@@ -316,10 +316,10 @@ const startPermissionWatch = () => {
   box-sizing: border-box;
   width: min(100%, calc((100vh - 2 * var(--toolbar-height) - 30px) * var(--keyboard-columns) / var(--keyboard-rows) + 30px));
   padding: 15px;
-  border-radius: 20px;
+  border-radius: 24px;
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(20px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6);
   margin: 0 auto;
 }
 
@@ -330,8 +330,7 @@ const startPermissionWatch = () => {
 }
 
 .key-content {
-  --key-unit: calc(100cqw / var(--keyboard-columns));
-  --key-gap: calc(var(--key-unit) * 0.09);
+  --key-gap: 5px;
   position: absolute;
   box-sizing: border-box;
   display: flex;
@@ -350,12 +349,12 @@ const startPermissionWatch = () => {
   display: flex;
   align-items: center;
   cursor: pointer;
-  border-radius: 7px;
+  border-radius: 10px;
   justify-content: center;
   font-weight: 500;
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.2), transparent 65%), hsl(0, calc(8% + var(--t) * 72%), calc(97% - var(--t) * 47%));
+  background: hsl(0, calc(8% + var(--t) * 72%), calc(97% - var(--t) * 47%));
   color: #333;
-  box-shadow: 2px 3px 5px rgba(0, 0, 0, calc(0.1 + var(--t) * 0.1)), -2px -2px 5px rgba(255, 255, 255, calc(0.9 - var(--t) * 0.7)), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  box-shadow: 3px 3px 6px rgba(0, 0, 0, calc(0.08 + var(--t) * 0.12)), -3px -3px 6px rgba(255, 255, 255, calc(0.9 - var(--t) * 0.7));
   transition: transform 0.08s ease, box-shadow 0.12s ease, background 0.2s ease, color 0.2s ease;
 }
 
@@ -371,8 +370,8 @@ const startPermissionWatch = () => {
 
 .key:active,
 .key.active {
-  transform: translateY(1px) scale(0.98) !important;
-  box-shadow: inset 1px 2px 3px rgba(0, 0, 0, calc(0.15 + var(--t) * 0.2)), inset -1px -1px 3px rgba(255, 255, 255, calc(0.8 - var(--t) * 0.6)) !important;
+  transform: translateY(2px) scale(0.96) !important;
+  box-shadow: inset 2px 2px 5px rgba(0, 0, 0, calc(0.15 + var(--t) * 0.2)), inset -2px -2px 5px rgba(255, 255, 255, calc(0.8 - var(--t) * 0.6)) !important;
 }
 
 .key.hot {
