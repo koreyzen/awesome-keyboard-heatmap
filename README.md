@@ -2,7 +2,7 @@
 
 把每天的键盘使用，变成一张看得见的热力图。
 
-基于 [zxc7563598/key-heat](https://github.com/zxc7563598/key-heat) 的 macOS 体验改进版，由 [koreyzen](https://github.com/koreyzen) 维护。保留原工程的全局按键统计、本地 SQLite 存储、托盘和开机自启动能力，重点重新打磨键盘布局与交互。
+基于 [zxc7563598/key-heat](https://github.com/zxc7563598/key-heat) 的 macOS 体验改进版，由 [koreyzen](https://github.com/koreyzen) 维护。保留原工程的全局按键统计、本地 SQLite 存储和开机自启动能力，重点重新打磨键盘布局与交互。
 
 ![Keyboard Heatmap macOS 实机界面](assets/keyboard-heatmap-macos.png)
 
@@ -20,6 +20,8 @@
 | 按键细节 | 不同字形的粗细、位置不一致 | 统一回车、Shift、电源图标；边缘宽键文字按标准键中心线对齐 |
 | 方向键 | 独立方向键 | 左右键正常高度，上下键共用方形外观，两半独立统计、着色与提示 |
 | 顶部操作 | 常驻启动、停止类操作 | 已启动的操作自动隐藏，保留三项状态；色块仅悬停单个时高亮 |
+
+macOS 使用 Dock 作为应用入口，不显示菜单栏托盘图标。关闭窗口后继续后台统计，点击 Dock 图标可重新打开。
 
 主题选择保存在本机，切换颜色不会额外查询数据库。文字不会被误选中，时间筛选和总计始终显示。
 

@@ -13,7 +13,7 @@ import (
 
 type GreetService struct {
 	repo storage.Repository
-	t    *TrayApp
+	t    *KeyboardApp
 }
 
 // 获取键盘布局
