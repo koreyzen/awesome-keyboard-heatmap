@@ -311,6 +311,10 @@ const startPermissionWatch = () => {
           :style="key.Code === 'None' ? null : [keyStyleCache, { '--t': heatmapEnabled ? key.Hot : 0, '--key-rows': key.H || 1 }]"
           @mouseenter="onKeyEnter(key)" @mouseleave="onKeyLeave">
           <span v-if="countsEnabled && key.Code !== 'None'" class="key-count">{{ key.Count }}</span>
+          <svg v-else-if="key.Code === 'Close'" class="key-icon"
+            viewBox="0 0 24 24" role="img" :aria-label="key.Code">
+            <circle cx="12" cy="12" r="8" />
+          </svg>
           <svg v-else-if="key.Code === 'Enter' || key.Code === 'NumPad Enter'" class="key-icon"
             viewBox="0 0 24 24" role="img" :aria-label="key.Code">
             <path d="M19 5v8H5m5-5-5 5 5 5" />
