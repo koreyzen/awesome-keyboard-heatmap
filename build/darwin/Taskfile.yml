@@ -5,8 +5,8 @@ includes:
 
 vars:
   APP_BUNDLE_NAME: "Keyboard Heatmap"
-  # Reuse this local certificate so macOS recognises updates as the same app.
-  SIGN_IDENTITY: "Capso Local Development"
+  # Set KEY_HEAT_SIGN_IDENTITY to reuse your certificate across local updates.
+  SIGN_IDENTITY: '{{.KEY_HEAT_SIGN_IDENTITY | default "-"}}'
   # KEYCHAIN_PROFILE: "my-notarize-profile"
   # ENTITLEMENTS: "build/darwin/entitlements.plist"
 
