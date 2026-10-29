@@ -271,7 +271,7 @@ const startPermissionWatch = () => {
           <span v-if="countsEnabled" class="key-count">{{ key.Count }}</span>
           <svg v-else-if="key.Code === 'TouchID'" class="key-icon"
             viewBox="0 0 24 24" role="img" :aria-label="key.Code">
-            <circle cx="12" cy="12" r="8" />
+            <circle cx="12" cy="12" r="8" stroke-width="2.4" />
           </svg>
           <svg v-else-if="key.Code === 'Enter' || key.Code === 'NumPad Enter'" class="key-icon"
             viewBox="0 0 24 24" role="img" :aria-label="key.Code">
