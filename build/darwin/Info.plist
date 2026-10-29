@@ -3,8 +3,10 @@
     <dict>
         <key>CFBundlePackageType</key>
             <string>APPL</string>
+        <key>CFBundleDisplayName</key>
+            <string>Keyboard Heatmap</string>
         <key>CFBundleName</key>
-            <string>My Product</string>
+            <string>Keyboard Heatmap</string>
         <key>CFBundleExecutable</key>
             <string>key-heat</string>
         <key>CFBundleIdentifier</key>

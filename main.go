@@ -64,7 +64,7 @@ func main() {
 	}
 	dockService := dock.New()
 	app := application.New(application.Options{
-		Name:        "Key Heat",
+		Name:        "Keyboard Heatmap",
 		Description: "键盘按键热力图监控工具 - 实时记录并可视化您的键盘使用习惯",
 		Services: []application.Service{
 			application.NewService(greet),
@@ -117,7 +117,7 @@ func (t *TrayApp) setup() {
 // 创建菜单
 func (t *TrayApp) createMenu() {
 	t.menu = t.app.NewMenu()
-	t.menu.Add("KeyHeat").SetEnabled(false)
+	t.menu.Add("Keyboard Heatmap").SetEnabled(false)
 	// 切换监听状态
 	if t.isActive {
 		t.menu.Add("● 正在监听").SetEnabled(false)
@@ -153,7 +153,7 @@ func (t *TrayApp) createMenu() {
 // 打开窗口
 func (t *TrayApp) openWindow() {
 	t.window = t.app.Window.NewWithOptions(application.WebviewWindowOptions{
-		Title:  "Key Heat",
+		Title:  "Keyboard Heatmap",
 		Width:  1200,
 		Height: 600,
 		Mac: application.MacWindow{

@@ -6,8 +6,8 @@ version: '3'
 # This information is used to generate the build assets.
 info:
   companyName: "何俊杰" # The name of the company
-  productName: "key-heat" # The name of the application
-  productIdentifier: "com.keyheat.app" # The unique product identifier
+  productName: "Keyboard Heatmap" # The name of the application
+  productIdentifier: "com.example.keyheat" # The unique product identifier
   description: "键盘按键热力图监控工具 - 实时记录并可视化您的键盘使用习惯" # The application description
   copyright: "(c) 2025, 何俊杰" # Copyright text
   comments: "" # Comments
