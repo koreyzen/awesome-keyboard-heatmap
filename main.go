@@ -153,9 +153,10 @@ func (t *TrayApp) createMenu() {
 // 打开窗口
 func (t *TrayApp) openWindow() {
 	t.window = t.app.Window.NewWithOptions(application.WebviewWindowOptions{
-		Title:  "Keyboard Heatmap",
-		Width:  780,
-		Height: 429,
+		Title:         "Keyboard Heatmap",
+		Width:         780,
+		Height:        429,
+		DisableResize: true,
 		Mac: application.MacWindow{
 			Backdrop: application.MacBackdropTranslucent,
 			TitleBar: application.MacTitleBarHiddenInset,
