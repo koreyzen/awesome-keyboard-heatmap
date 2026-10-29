@@ -11,8 +11,9 @@ import Keyboard from "./components/Keyboard.vue";
 <style scoped>
 .keyboard-wrapper {
   --toolbar-height: 52px;
+  --page-inset: 19px;
   box-sizing: border-box;
-  padding: 0 24px;
+  padding: 0 var(--page-inset);
   display: grid;
   grid-template-rows: var(--toolbar-height) minmax(0, 1fr) var(--toolbar-height);
   justify-items: center;

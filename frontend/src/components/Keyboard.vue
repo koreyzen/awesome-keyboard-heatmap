@@ -417,7 +417,7 @@ const startPermissionWatch = () => {
 .status-bar {
   --wails-draggable: drag;
   box-sizing: border-box;
-  padding-left: 88px;
+  padding-left: calc(112px - var(--page-inset));
   width: 100%;
   display: flex;
   align-items: center;
