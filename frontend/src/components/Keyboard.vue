@@ -302,7 +302,15 @@ const startPermissionWatch = () => {
         <div class="key" :class="{ active: activeKeys.has(key.Code), hot: heatmapEnabled && key.Hot > 0.6 }"
           :style="key.Code === 'None' ? null : [keyStyleCache, { '--t': heatmapEnabled ? key.Hot : 0 }]"
           @mouseenter="onKeyEnter(key)" @mouseleave="onKeyLeave">
-          <span>{{ key.Label }}</span>
+          <svg v-if="key.Code === 'Enter' || key.Code === 'NumPad Enter'" class="key-icon"
+            viewBox="0 0 24 24" role="img" :aria-label="key.Code">
+            <path d="M19 5v8H5m5-5-5 5 5 5" />
+          </svg>
+          <svg v-else-if="key.Code === 'Shift' || key.Code === 'RightShift'" class="key-icon"
+            viewBox="0 0 24 24" role="img" :aria-label="key.Code">
+            <path d="M12 4l8 8h-5v8H9v-8H4z" />
+          </svg>
+          <span v-else>{{ key.Label }}</span>
           <KeyTooltip v-if="hoverKey === key" :data="key" />
         </div>
       </div>
@@ -364,6 +372,16 @@ const startPermissionWatch = () => {
   color: #333;
   box-shadow: 3px 3px 6px rgba(0, 0, 0, calc(0.08 + var(--t) * 0.12)), -3px -3px 6px rgba(255, 255, 255, calc(0.9 - var(--t) * 0.7));
   transition: transform 0.08s ease, box-shadow 0.12s ease, background 0.2s ease, color 0.2s ease;
+}
+
+.key-icon {
+  width: 1.25em;
+  height: 1.25em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .key:active,
