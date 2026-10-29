@@ -305,7 +305,7 @@ func GetKeyLayout(l LayoutType) Layout {
 	case LayoutANSI:
 		return Layout{
 			{
-				{Code: "Esc", Label: "Esc", W: 1.5},
+				{Code: "Esc", Label: "esc", W: 1.5},
 				{Code: "F1", Label: "F1", W: 1},
 				{Code: "F2", Label: "F2", W: 1},
 				{Code: "F3", Label: "F3", W: 1},
@@ -345,8 +345,8 @@ func GetKeyLayout(l LayoutType) Layout {
 				{Code: "=", Label: "=", W: 1},
 				{Code: "Delete", Label: "⌫", W: 1.5},
 				{Code: "None", Label: "", W: 0.2},
-				{Code: "Help", Label: "Help", W: 1},
-				{Code: "Home", Label: "Home", W: 1},
+				{Code: "Help", Label: "help", W: 1},
+				{Code: "Home", Label: "home", W: 1},
 				{Code: "PageUp", Label: "↑", W: 1},
 				{Code: "None", Label: "", W: 0.2},
 				{Code: "NumLock", Label: "☒", W: 1},
@@ -370,8 +370,8 @@ func GetKeyLayout(l LayoutType) Layout {
 				{Code: "]", Label: "]", W: 1},
 				{Code: "\\", Label: "\\", W: 1},
 				{Code: "None", Label: "", W: 0.2},
-				{Code: "Del", Label: "Del", W: 1},
-				{Code: "End", Label: "End", W: 1},
+				{Code: "Del", Label: "del", W: 1},
+				{Code: "End", Label: "end", W: 1},
 				{Code: "PageDown", Label: "↓", W: 1},
 				{Code: "None", Label: "", W: 0.2},
 				{Code: "NumPad7", Label: "7", W: 1},
@@ -427,7 +427,7 @@ func GetKeyLayout(l LayoutType) Layout {
 				{Code: "NumPad Enter", Label: "⏎", W: 1, H: 2},
 			},
 			{
-				{Code: "Fn", Label: "Fn", W: 1},
+				{Code: "Fn", Label: "fn", W: 1},
 				{Code: "Control", Label: "⌃", W: 1},
 				{Code: "Option", Label: "⌥", W: 1},
 				{Code: "Command", Label: "⌘", W: 1.25},
