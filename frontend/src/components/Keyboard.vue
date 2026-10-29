@@ -1,7 +1,7 @@
 <script setup>
 import { Events } from "@wailsio/runtime";
 import { ref, onMounted, onBeforeUnmount, nextTick, computed } from 'vue'
-import { GetHeatmap, GetKeyLayout, GetPermission, SetMonitorClose, SetMonitorStart, GetMonitorStatus, GetBootStartup, OpenBootStartup, CloseBootStartup, GetPrompt } from "../../bindings/github.com/zxc7563598/key-heat/greetservice";
+import { GetHeatmap, GetKeyLayout, GetPermission, SetMonitorStart, GetMonitorStatus, GetBootStartup, OpenBootStartup, GetPrompt } from "../../bindings/github.com/zxc7563598/key-heat/greetservice";
 import KeyTooltip from "./KeyTooltip.vue";
 import PromptDialog from "./PromptDialog.vue"
 
@@ -24,36 +24,9 @@ const setMonitorStart = () => {
   })
 }
 
-// 关闭监听
-const setMonitorClose = () => {
-  console.log("关闭监听", "启动")
-  SetMonitorClose().then(() => {
-    GetMonitorStatus().then(async (result) => {
-      monitor.value = result
-    }).catch((err) => {
-      console.log(err)
-    })
-  }).catch((err) => {
-    console.log(err)
-  })
-}
-
 // 开启自启动
 const openBootStartup = () => {
   OpenBootStartup().then(() => {
-    GetBootStartup().then(async (result) => {
-      bootStartup.value = result
-    }).catch((err) => {
-      console.log(err)
-    })
-  }).catch((err) => {
-    console.log(err)
-  })
-}
-
-// 关闭自启动
-const closeBootStartup = () => {
-  CloseBootStartup().then(() => {
     GetBootStartup().then(async (result) => {
       bootStartup.value = result
     }).catch((err) => {
@@ -101,23 +74,13 @@ const keyStyleCache = computed(() => {
   }
 })
 
-// 切换组件
-const tab = ref("base");
-const setTab = (value) => {
-  tab.value = value;
-  // 获取热力图数据
-  if (value == "heat") {
-    applyRange()
-  } else {
-    layout.value = layout.value.map(row =>
-      row.map(key => ({
-        ...key,
-        Hot: Math.pow(0 / 100, 1.4),
-        Count: 0
-      }))
-    )
-  }
-};
+// 热力图作为键盘上的可切换叠层
+const heatmapEnabled = ref(false)
+const toggleHeatmap = () => {
+  heatmapEnabled.value = !heatmapEnabled.value
+  hoverKey.value = null
+  if (heatmapEnabled.value) applyRange()
+}
 // 快捷日期范围，周一为每周第一天
 const ranges = ['今日', '昨日', '本周', '上周', '历史全部']
 const selectedRange = ref('今日')
@@ -186,13 +149,13 @@ const updateMouse = (e) => {
   })
 }
 const onKeyEnter = (key, e) => {
-  if (tab.value == "heat") {
+  if (heatmapEnabled.value) {
     hoverKey.value = key
     updateMouse(e)
   }
 }
 const onKeyMove = (e) => {
-  if (tab.value == "heat") {
+  if (heatmapEnabled.value) {
     updateMouse(e)
   }
 }
@@ -316,14 +279,8 @@ const startPermissionWatch = () => {
       <div class="action-btn primary" v-if="!monitor" @click="setMonitorStart">
         启动监听
       </div>
-      <div class="action-btn danger" v-if="monitor" @click="setMonitorClose">
-        停止监听
-      </div>
       <div class="action-btn primary" v-if="!bootStartup" @click="openBootStartup">
         开机自启动
-      </div>
-      <div class="action-btn danger" v-if="bootStartup" @click="closeBootStartup">
-        关闭开机自启动
       </div>
     </div>
     <div class="status-right">
@@ -331,7 +288,7 @@ const startPermissionWatch = () => {
         <div class="dot-wrapper">
           <span class="dot" :class="{ ok: bootStartup, bad: !bootStartup }"></span>
           <div class="tooltip-status">
-            {{ permission ? "已开启开机自启动" : "未开启开机自启动" }}
+            {{ bootStartup ? "已开启开机自启动" : "未开启开机自启动" }}
           </div>
         </div>
         <span class="label">自启动</span>
@@ -360,8 +317,8 @@ const startPermissionWatch = () => {
     <div v-for="(row, rowIndex) in layout" :key="rowIndex" class="row">
       <div v-for="key in row" :key="key.Code" class="key-content" :style="getKeyContentStyle(key)"
         :ref="el => setStandardKeyRef(el, key)">
-        <div class="key" :class="{ active: activeKeys.has(key.Code), hot: key.Hot > 0.6 }"
-          :style="key.Code === 'None' ? null : [keyStyleCache, { '--t': key.Hot }]"
+        <div class="key" :class="{ active: activeKeys.has(key.Code), hot: heatmapEnabled && key.Hot > 0.6 }"
+          :style="key.Code === 'None' ? null : [keyStyleCache, { '--t': heatmapEnabled ? key.Hot : 0 }]"
           @mouseenter="onKeyEnter(key, $event)" @mousemove="onKeyMove" @mouseleave="onKeyLeave">
           {{ key.Label }}
         </div>
@@ -369,15 +326,10 @@ const startPermissionWatch = () => {
     </div>
   </div>
   <div class="functional">
-    <div class="group">
-      <div class="action-btn" :class="{ selected: tab === 'base' }" @click="setTab('base')">
-        基础
-      </div>
-      <div class="action-btn" :class="{ selected: tab === 'heat' }" @click="setTab('heat')">
-        热力图
-      </div>
+    <div class="action-btn" :class="{ selected: heatmapEnabled }" @click="toggleHeatmap">
+      热力图
     </div>
-    <div class="date-range" v-if="tab === 'heat'">
+    <div class="date-range" v-if="heatmapEnabled">
       <div v-for="range in ranges" :key="range" class="action-btn"
         :class="{ selected: selectedRange === range }" @click="selectRange(range)">
         {{ range }}
@@ -393,7 +345,8 @@ const startPermissionWatch = () => {
 
 <style scoped>
 .keyboard {
-  width: 85%;
+  box-sizing: border-box;
+  width: 100%;
   padding: 15px;
   border-radius: 24px;
   background: rgba(255, 255, 255, 0.7);
@@ -427,10 +380,6 @@ const startPermissionWatch = () => {
   color: #333;
   box-shadow: 3px 3px 6px rgba(0, 0, 0, calc(0.08 + var(--t) * 0.12)), -3px -3px 6px rgba(255, 255, 255, calc(0.9 - var(--t) * 0.7));
   transition: transform 0.08s ease, box-shadow 0.12s ease, background 0.2s ease, color 0.2s ease;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
 }
 
 .key:active,
@@ -446,16 +395,8 @@ const startPermissionWatch = () => {
 .functional {
   display: flex;
   align-items: center;
-  align-self: start;
-  width: 85%;
+  width: 100%;
   margin-top: 10px;
-}
-
-.group {
-  display: flex;
-  gap: 18px;
-  position: relative;
-  left: -15px;
 }
 
 .date-range {
@@ -463,8 +404,6 @@ const startPermissionWatch = () => {
   align-items: center;
   gap: 8px;
   margin-left: auto;
-  position: relative;
-  right: -15px;
 }
 
 .action-btn.selected {
@@ -474,9 +413,14 @@ const startPermissionWatch = () => {
 }
 
 .status-bar {
-  align-self: end;
-  margin-bottom: 10px;
-  width: 85%;
+  --wails-draggable: drag;
+  position: absolute;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  height: 50px;
+  padding: 0 24px 0 112px;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -487,8 +431,6 @@ const startPermissionWatch = () => {
   display: flex;
   align-items: center;
   gap: 18px;
-  position: relative;
-  left: -15px;
 }
 
 .status-item {
@@ -549,10 +491,10 @@ const startPermissionWatch = () => {
 
 .tooltip-status {
   position: absolute;
-  bottom: 140%;
+  top: 140%;
   left: 50%;
   transform: translateX(-50%) scale(0.96);
-  transform-origin: bottom center;
+  transform-origin: top center;
   padding: 6px 10px;
   border-radius: 8px;
   font-size: 12px;
@@ -568,11 +510,11 @@ const startPermissionWatch = () => {
 .tooltip-status::after {
   content: "";
   position: absolute;
-  top: 100%;
+  bottom: 100%;
   left: 50%;
   transform: translateX(-50%);
   border: 5px solid transparent;
-  border-top-color: rgba(60, 60, 67, 0.9);
+  border-bottom-color: rgba(60, 60, 67, 0.9);
 }
 
 .dot-wrapper:hover .tooltip-status {
@@ -583,11 +525,10 @@ const startPermissionWatch = () => {
 .status-right {
   display: flex;
   gap: 10px;
-  position: relative;
-  right: -15px;
 }
 
 .action-btn {
+  --wails-draggable: no-drag;
   white-space: nowrap;
   padding: 6px 14px;
   border-radius: 999px;
@@ -612,7 +553,4 @@ const startPermissionWatch = () => {
   color: #1a7f37;
 }
 
-.action-btn.danger {
-  color: #c5221f;
-}
 </style>
