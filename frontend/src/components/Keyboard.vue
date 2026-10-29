@@ -51,6 +51,8 @@ const getKeyContentStyle = (key) => ({
   top: `${key.Y / geometry.value.rows * 100}%`,
   width: `${key.W / geometry.value.columns * 100}%`,
   height: `${key.H / geometry.value.rows * 100}%`,
+  '--label-offset': key.X === 0 ? (1 - key.W) / 2
+    : key.X + key.W === geometry.value.columns ? (key.W - 1) / 2 : 0,
 })
 
 // 热力图作为键盘上的可切换叠层
@@ -270,19 +272,21 @@ const startPermissionWatch = () => {
           :style="{ '--t': heatmapEnabled ? key.Hot : 0 }"
           @mouseenter="onKeyEnter(key)" @mouseleave="onKeyLeave">
           <span v-if="countsEnabled" class="key-count">{{ key.Count }}</span>
-          <svg v-else-if="key.Code === 'TouchID'" class="key-icon"
-            viewBox="0 0 24 24" role="img" :aria-label="key.Code">
-            <circle cx="12" cy="12" r="8" stroke-width="2.4" />
-          </svg>
-          <svg v-else-if="key.Code === 'Enter' || key.Code === 'NumPad Enter'" class="key-icon"
-            viewBox="0 0 24 24" role="img" :aria-label="key.Code">
-            <path d="M19 5v8H5m5-5-5 5 5 5" />
-          </svg>
-          <svg v-else-if="key.Code === 'Shift' || key.Code === 'RightShift'" class="key-icon"
-            viewBox="0 0 24 24" role="img" :aria-label="key.Code">
-            <path d="M12 4l8 8h-5v8H9v-8H4z" />
-          </svg>
-          <span v-else>{{ key.Label }}</span>
+          <span v-else class="key-label">
+            <svg v-if="key.Code === 'TouchID'" class="key-icon"
+              viewBox="0 0 24 24" role="img" :aria-label="key.Code">
+              <circle cx="12" cy="12" r="8" stroke-width="2.4" />
+            </svg>
+            <svg v-else-if="key.Code === 'Enter' || key.Code === 'NumPad Enter'" class="key-icon"
+              viewBox="0 0 24 24" role="img" :aria-label="key.Code">
+              <path d="M19 5v8H5m5-5-5 5 5 5" />
+            </svg>
+            <svg v-else-if="key.Code === 'Shift' || key.Code === 'RightShift'" class="key-icon"
+              viewBox="0 0 24 24" role="img" :aria-label="key.Code">
+              <path d="M12 4l8 8h-5v8H9v-8H4z" />
+            </svg>
+            <span v-else>{{ key.Label }}</span>
+          </span>
           <Transition name="key-tooltip">
             <KeyTooltip v-if="hoverKey === key" :data="key" />
           </Transition>
@@ -357,6 +361,13 @@ const startPermissionWatch = () => {
   color: #333;
   box-shadow: 3px 3px 6px rgba(0, 0, 0, calc(0.08 + var(--t) * 0.12)), -3px -3px 6px rgba(255, 255, 255, calc(0.9 - var(--t) * 0.7));
   transition: transform 0.08s ease, box-shadow 0.12s ease, background 0.2s ease, color 0.2s ease;
+}
+
+.key-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateX(calc(var(--label-offset) * 100cqw / var(--keyboard-columns)));
 }
 
 .key-icon {
