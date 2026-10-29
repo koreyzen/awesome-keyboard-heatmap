@@ -1,3 +1,14 @@
+html {
+  font-family: "PingFang SC", sans-serif;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
 html,
 body {
   padding: 0;

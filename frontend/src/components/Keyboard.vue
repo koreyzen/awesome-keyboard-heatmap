@@ -1,6 +1,6 @@
 <script setup>
 import { Events } from "@wailsio/runtime";
-import { ref, onMounted, onBeforeUnmount, nextTick, computed, watch, watchEffect } from 'vue'
+import { ref, onMounted, onBeforeUnmount, nextTick, computed } from 'vue'
 import { GetHeatmap, GetKeyLayout, GetPermission, SetMonitorClose, SetMonitorStart, GetMonitorStatus, GetBootStartup, OpenBootStartup, CloseBootStartup, GetPrompt } from "../../bindings/github.com/zxc7563598/key-heat/greetservice";
 import KeyTooltip from "./KeyTooltip.vue";
 import PromptDialog from "./PromptDialog.vue"
@@ -103,11 +103,8 @@ const keyStyleCache = computed(() => {
 
 // 切换组件
 const tab = ref("base");
-const indicatorStyle = ref({});
-const setTab = async (value, event) => {
+const setTab = (value) => {
   tab.value = value;
-  await nextTick();
-  updateIndicator(event.target);
   // 获取热力图数据
   if (value == "heat") {
     applyRange()
@@ -121,25 +118,35 @@ const setTab = async (value, event) => {
     )
   }
 };
-const updateIndicator = (el) => {
-  const rect = el.getBoundingClientRect();
-  const parentRect = el.parentNode.getBoundingClientRect();
-  indicatorStyle.value = {
-    width: rect.width + "px",
-    transform: `translateX(${rect.left - parentRect.left}px)`,
-  };
-};
-
-// 提交热力图筛选日期
-const startDate = ref("");
-const endDate = ref("");
-const formatDate = (date) => {
-  if (!date) return "";
-  return date;
-};
+// 快捷日期范围，周一为每周第一天
+const ranges = ['今日', '昨日', '本周', '上周', '历史全部']
+const selectedRange = ref('今日')
+const dateRange = (range) => {
+  if (range === '历史全部') return ['', '']
+  const start = new Date()
+  const end = new Date(start)
+  if (range === '昨日') {
+    start.setDate(start.getDate() - 1)
+    end.setDate(end.getDate() - 1)
+  } else if (range === '本周' || range === '上周') {
+    start.setDate(start.getDate() - (start.getDay() + 6) % 7 - (range === '上周' ? 7 : 0))
+    end.setTime(start.getTime())
+    end.setDate(start.getDate() + 6)
+  }
+  const format = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+  return [format(start), format(end)]
+}
+const initialRange = dateRange(selectedRange.value)
+const startDate = ref(initialRange[0])
+const endDate = ref(initialRange[1])
+const selectRange = (range) => {
+  selectedRange.value = range
+  ;[startDate.value, endDate.value] = dateRange(range)
+  applyRange()
+}
 const applyRange = () => {
-  const start = formatDate(startDate.value) ?? "";
-  const end = formatDate(endDate.value) ?? "";
+  const start = startDate.value;
+  const end = endDate.value;
   GetHeatmap(start, end).then(async (result) => {
     // 找最大值
     const values = Object.values(result)
@@ -165,9 +172,6 @@ const applyRange = () => {
     console.log("热力图获取失败", err)
   })
 };
-watch([startDate, endDate], ([s, e]) => {
-  applyRange();
-});
 
 // 鼠标移入按键
 const hoverKey = ref(null)
@@ -201,8 +205,8 @@ const showDialog = ref(false)
 const promptText = ref("")
 
 const getPrompt = () => {
-  const start = formatDate(startDate.value) ?? ""
-  const end = formatDate(endDate.value) ?? ""
+  const start = startDate.value
+  const end = endDate.value
   GetPrompt(start, end).then((result) => {
     promptText.value = result
     showDialog.value = true
@@ -253,11 +257,6 @@ onMounted(async () => {
   Events.On("active:switch", (event) => {
     monitor.value = event.data
   })
-  // 按钮初始化
-  const active = document.querySelector(".button.active");
-  if (active) {
-    updateIndicator(active);
-  }
   // 检查权限
   await checkPermission()
   document.addEventListener("visibilitychange", () => {
@@ -371,27 +370,24 @@ const startPermissionWatch = () => {
   </div>
   <div class="functional">
     <div class="group">
-      <div class="indicator" :style="indicatorStyle"></div>
-      <div class="button" :class="{ active: tab === 'base' }" @click="setTab('base', $event)">
+      <div class="action-btn" :class="{ selected: tab === 'base' }" @click="setTab('base')">
         基础
       </div>
-      <div class="button" :class="{ active: tab === 'heat' }" @click="setTab('heat', $event)">
+      <div class="action-btn" :class="{ selected: tab === 'heat' }" @click="setTab('heat')">
         热力图
       </div>
     </div>
     <div class="date-range" v-if="tab === 'heat'">
-      <input type="date" v-model="startDate" class="date-input" />
-      <span class="separator">—</span>
-      <input type="date" v-model="endDate" class="date-input" />
-      <div class="apply-btn" @click="startDate = endDate = ''">
-        清空
+      <div v-for="range in ranges" :key="range" class="action-btn"
+        :class="{ selected: selectedRange === range }" @click="selectRange(range)">
+        {{ range }}
       </div>
-      <div class="apply-btn" @click="getPrompt">
+      <div class="action-btn" @click="getPrompt">
         生成报告
       </div>
     </div>
   </div>
-  <KeyTooltip :data="hoverKey" :x="mouseX" :y="mouseY" :start="formatDate(startDate)" :end="formatDate(endDate)" />
+  <KeyTooltip :data="hoverKey" :x="mouseX" :y="mouseY" :start="startDate" :end="endDate" />
   <PromptDialog v-model="showDialog" :prompt="promptText" />
 </template>
 
@@ -403,7 +399,7 @@ const startPermissionWatch = () => {
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(20px);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6);
-  margin: 10px auto 30px auto;
+  margin: 0 auto;
 }
 
 .row {
@@ -449,56 +445,17 @@ const startPermissionWatch = () => {
 
 .functional {
   display: flex;
+  align-items: center;
+  align-self: start;
   width: 85%;
+  margin-top: 10px;
 }
 
 .group {
-  position: relative;
   display: flex;
-  background: #ffffff;
-  border-radius: 999px;
-  padding: 4px;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  left: -15px;
-}
-
-.indicator {
-  position: absolute;
-  top: 4px;
-  left: 0px;
-  height: calc(100% - 8px);
-  border-radius: 999px;
-  background: linear-gradient(to bottom, #f7f8fa, #eef0f3);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 2px rgba(255, 255, 255, 0.9);
-  transform: translateY(-0.5px);
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 0;
-}
-
-.button {
+  gap: 18px;
   position: relative;
-  z-index: 1;
-  padding: 8px 20px;
-  font-size: 14px;
-  color: #666;
-  border-radius: 999px;
-  cursor: pointer;
-  user-select: none;
-  transition: all 0.25s ease;
-  white-space: nowrap;
-}
-
-.button:hover {
-  color: #222;
-  transform: translateY(-0.5px);
-}
-
-.button.active {
-  color: #111;
-}
-
-.button:active {
-  transform: scale(0.96);
+  left: -15px;
 }
 
 .date-range {
@@ -510,54 +467,15 @@ const startPermissionWatch = () => {
   right: -15px;
 }
 
-.date-input {
-  appearance: none;
-  -webkit-appearance: none;
-  padding: 6px 12px;
-  border-radius: 999px;
-  border: none;
-  background: #f7f8fa;
-  color: #333;
-  font-size: 13px;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06), 0 1px 1px rgba(255, 255, 255, 0.8);
-  transition: all 0.2s ease;
-}
-
-.date-input:hover {
-  background: #f0f1f3;
-}
-
-.date-input:focus {
-  outline: none;
-  background: #eef0f3;
-}
-
-.separator {
-  color: #999;
-  font-size: 12px;
-}
-
-.apply-btn {
-  padding: 6px 14px;
-  border-radius: 999px;
-  background: #ffffff;
-  cursor: pointer;
-  font-size: 13px;
-  color: #444;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  transition: all 0.2s ease;
-}
-
-.apply-btn:hover {
+.action-btn.selected {
   color: #111;
-  transform: translateY(-0.5px);
-}
-
-.apply-btn:active {
-  transform: scale(0.96);
+  background: linear-gradient(to bottom, #f7f8fa, #eef0f3);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .status-bar {
+  align-self: end;
+  margin-bottom: 10px;
   width: 85%;
   display: flex;
   align-items: center;
@@ -670,6 +588,7 @@ const startPermissionWatch = () => {
 }
 
 .action-btn {
+  white-space: nowrap;
   padding: 6px 14px;
   border-radius: 999px;
   font-size: 13px;
