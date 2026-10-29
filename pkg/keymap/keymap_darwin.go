@@ -390,12 +390,12 @@ func GetKeyLayout(l LayoutType) Layout {
 				{Code: "Space", Label: "", W: 5},
 				{Code: "RightCommand", Label: "⌘", W: 1.25},
 				{Code: "RightOption", Label: "⌥", W: 1},
-				{Code: "←", Label: "←", W: 1, H: 0.5},
+				{Code: "←", Label: "←", W: 1},
 				{W: 1, Stack: []Key{
 					{Code: "↑", Label: "↑"},
 					{Code: "↓", Label: "↓"},
 				}},
-				{Code: "→", Label: "→", W: 1, H: 0.5},
+				{Code: "→", Label: "→", W: 1},
 			},
 		}
 	default:
