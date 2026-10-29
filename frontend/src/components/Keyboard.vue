@@ -136,28 +136,10 @@ const applyRange = () => {
   })
 };
 
-// 鼠标移入按键
+// 悬停提示固定在当前按键上方
 const hoverKey = ref(null)
-const mouseX = ref(0)
-const mouseY = ref(0)
-let moveRAF = null
-const updateMouse = (e) => {
-  if (moveRAF) cancelAnimationFrame(moveRAF)
-  moveRAF = requestAnimationFrame(() => {
-    mouseX.value = e.clientX
-    mouseY.value = e.clientY
-  })
-}
-const onKeyEnter = (key, e) => {
-  if (heatmapEnabled.value) {
-    hoverKey.value = key
-    updateMouse(e)
-  }
-}
-const onKeyMove = (e) => {
-  if (heatmapEnabled.value) {
-    updateMouse(e)
-  }
+const onKeyEnter = (key) => {
+  if (heatmapEnabled.value) hoverKey.value = key
 }
 const onKeyLeave = () => {
   hoverKey.value = null
@@ -319,8 +301,9 @@ const startPermissionWatch = () => {
         :ref="el => setStandardKeyRef(el, key)">
         <div class="key" :class="{ active: activeKeys.has(key.Code), hot: heatmapEnabled && key.Hot > 0.6 }"
           :style="key.Code === 'None' ? null : [keyStyleCache, { '--t': heatmapEnabled ? key.Hot : 0 }]"
-          @mouseenter="onKeyEnter(key, $event)" @mousemove="onKeyMove" @mouseleave="onKeyLeave">
-          {{ key.Label }}
+          @mouseenter="onKeyEnter(key)" @mouseleave="onKeyLeave">
+          <span>{{ key.Label }}</span>
+          <KeyTooltip v-if="hoverKey === key" :data="key" />
         </div>
       </div>
     </div>
@@ -339,7 +322,6 @@ const startPermissionWatch = () => {
       </div>
     </div>
   </div>
-  <KeyTooltip :data="hoverKey" :x="mouseX" :y="mouseY" :start="startDate" :end="endDate" />
   <PromptDialog v-model="showDialog" :prompt="promptText" />
 </template>
 
@@ -367,6 +349,7 @@ const startPermissionWatch = () => {
 }
 
 .key {
+  position: relative;
   --t: 0;
   text-align: center;
   white-space: pre-wrap;
