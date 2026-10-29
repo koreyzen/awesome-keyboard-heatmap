@@ -345,6 +345,7 @@ const startPermissionWatch = () => {
 
 <style scoped>
 .keyboard {
+  align-self: center;
   box-sizing: border-box;
   width: 100%;
   padding: 15px;
@@ -396,7 +397,6 @@ const startPermissionWatch = () => {
   display: flex;
   align-items: center;
   width: 100%;
-  margin-top: 10px;
 }
 
 .date-range {
@@ -414,12 +414,8 @@ const startPermissionWatch = () => {
 
 .status-bar {
   --wails-draggable: drag;
-  position: absolute;
-  top: 0;
-  left: 0;
   box-sizing: border-box;
-  height: 50px;
-  padding: 0 24px 0 112px;
+  padding-left: 88px;
   width: 100%;
   display: flex;
   align-items: center;
