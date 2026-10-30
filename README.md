@@ -1,17 +1,17 @@
-# Keyboard Heatmap
+# Awesome Keyboard Heatmap
 
 面向 macOS 的键盘使用可视化工具，以 MacBook Pro 风格配列呈现按键频率与次数。支持七色主题、系统深色模式和本地统计。
 
 <p align="center">
-  <img src="assets/keyboard-heatmap-light.png" alt="Keyboard Heatmap 浅色模式" width="49%">
-  <img src="assets/keyboard-heatmap-dark.png" alt="Keyboard Heatmap 深色模式" width="49%">
+  <img src="assets/keyboard-heatmap-light.png" alt="Awesome Keyboard Heatmap 浅色模式" width="49%">
+  <img src="assets/keyboard-heatmap-dark.png" alt="Awesome Keyboard Heatmap 深色模式" width="49%">
 </p>
 
 [下载安装](#下载安装) · [功能特性](#功能特性) · [体验改进](#体验改进) · [数据与隐私](#数据与隐私) · [开发与构建](#开发与构建)
 
 ## 下载安装
 
-[下载 macOS 通用安装包](https://github.com/koreyzen/keyboard-heatmap/releases/latest/download/Keyboard-Heatmap-v1.1.2-macOS-universal.zip) · [查看版本说明](https://github.com/koreyzen/keyboard-heatmap/releases/latest)
+[下载 macOS 通用安装包](https://github.com/koreyzen/awesome-keyboard-heatmap/releases/latest/download/Keyboard-Heatmap-v1.1.2-macOS-universal.zip) · [查看版本说明](https://github.com/koreyzen/awesome-keyboard-heatmap/releases/latest)
 
 安装包同时支持 Apple 芯片和 Intel Mac。
 
@@ -44,7 +44,7 @@ MacBook Pro 风格的紧凑 ANSI 配列采用统一键宽比例，配合苹方�
 
 <table>
   <thead>
-    <tr><th nowrap>功能</th><th nowrap>原工程</th><th nowrap>Keyboard Heatmap</th></tr>
+    <tr><th nowrap>功能</th><th nowrap>原工程</th><th nowrap>Awesome Keyboard Heatmap</th></tr>
   </thead>
   <tbody>
     <tr><td nowrap>键盘配列</td><td nowrap>完整键盘</td><td nowrap>MacBook Pro 紧凑配列</td></tr>
@@ -80,8 +80,8 @@ macOS 数据文件位于：
 准备 Go 1.25+、Node.js 22 和 Xcode Command Line Tools，然后执行：
 
 ```bash
-git clone https://github.com/koreyzen/keyboard-heatmap.git
-cd keyboard-heatmap
+git clone https://github.com/koreyzen/awesome-keyboard-heatmap.git
+cd awesome-keyboard-heatmap
 go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha.74
 export PATH="$(go env GOPATH)/bin:$PATH"
 npm --prefix frontend ci
