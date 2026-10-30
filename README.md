@@ -11,7 +11,7 @@
 
 ## 下载安装
 
-[下载 macOS 通用安装包](https://github.com/koreyzen/keyboard-heatmap/releases/latest/download/Keyboard-Heatmap-v1.1.1-macOS-universal.zip) · [查看版本说明](https://github.com/koreyzen/keyboard-heatmap/releases/latest)
+[下载 macOS 通用安装包](https://github.com/koreyzen/keyboard-heatmap/releases/latest/download/Keyboard-Heatmap-v1.1.2-macOS-universal.zip) · [查看版本说明](https://github.com/koreyzen/keyboard-heatmap/releases/latest)
 
 安装包同时支持 Apple 芯片和 Intel Mac。
 
