@@ -37,6 +37,14 @@ macOS 使用 Dock 作为应用入口，不显示菜单栏托盘图标。关闭�
 
 沿用原工程每 10 秒或累计 500 次按键批量写入的方式。记录的是每个键的次数，不保存输入文本或按键顺序。当前总计对应屏幕所展示的配列；外接键盘独有的按键不计入这张配列的总计。
 
+## 下载 macOS 版本
+
+前往 [Releases](https://github.com/koreyzen/keyboard-heatmap/releases/latest)，下载 `Keyboard-Heatmap-v1.1.0-macOS-universal.zip`。这是 Apple 芯片和 Intel 通用包。
+
+解压后将 `Keyboard Heatmap.app` 拖入「应用程序」，启动后到「系统设置 → 隐私与安全性 → 辅助功能」开启权限。应用使用本地固定证书签名，未经过 Apple 公证；若系统阻止首次打开，可在「系统设置 → 隐私与安全性」中允许打开。
+
+新版支持随系统切换的完整深色模式；统计在原有批量写入后自动刷新，跨天后自动按新日期显示今日数据。
+
 ## macOS 本地构建
 
 准备 Go 1.25+、Node.js 22 和 Xcode Command Line Tools，然后执行：
