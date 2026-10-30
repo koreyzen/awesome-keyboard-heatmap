@@ -96,7 +96,8 @@ const showToast = (text) => {
 .overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.4);
+    background: var(--scrim);
+    z-index: 100;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -106,7 +107,8 @@ const showToast = (text) => {
 .card {
     width: 600px;
     max-height: 80vh;
-    background: #fff;
+    background: var(--dialog);
+    color: var(--text);
     border-radius: 16px;
     padding: 20px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
@@ -127,12 +129,12 @@ const showToast = (text) => {
 
 .desc {
     margin: 10px 0;
-    color: #666;
+    color: var(--secondary-text);
     font-size: 14px;
 }
 
 .prompt-box {
-    background: #f6f6f6;
+    background: var(--inset);
     border-radius: 10px;
     padding: 10px;
     overflow: auto;
@@ -142,7 +144,7 @@ const showToast = (text) => {
 
 .toggle {
     margin-top: 6px;
-    color: #409eff;
+    color: var(--link);
     cursor: pointer;
     font-size: 13px;
 }
@@ -162,18 +164,19 @@ button {
 }
 
 .primary {
-    background: #409eff;
+    background: var(--accent);
     color: white;
 }
 
 .secondary {
-    background: #eee;
+    background: var(--control);
+    color: var(--control-text);
 }
 
 .hint {
     margin-top: 10px;
     font-size: 12px;
-    color: #999;
+    color: var(--secondary-text);
     text-align: center;
 }
 
@@ -182,7 +185,7 @@ button {
     bottom: 40px;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.8);
+    background: var(--popover);
     color: #fff;
     padding: 10px 16px;
     border-radius: 20px;

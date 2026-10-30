@@ -17,7 +17,7 @@ import Keyboard from "./components/Keyboard.vue";
   display: grid;
   grid-template-rows: var(--toolbar-height) minmax(0, 1fr) var(--toolbar-height);
   justify-items: center;
-  background: #f2f3f5;
+  background: var(--page);
   width: 100%;
   height: 100vh;
 }

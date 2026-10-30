@@ -99,8 +99,9 @@ func (t *KeyboardApp) openWindow() {
 		Height:        429,
 		DisableResize: true,
 		Mac: application.MacWindow{
-			Backdrop: application.MacBackdropTranslucent,
-			TitleBar: application.MacTitleBarHiddenInset,
+			Backdrop:   application.MacBackdropTranslucent,
+			Appearance: application.DefaultAppearance,
+			TitleBar:   application.MacTitleBarHiddenInset,
 		},
 		BackgroundColour: application.NewRGB(27, 38, 54),
 		URL:              "/",

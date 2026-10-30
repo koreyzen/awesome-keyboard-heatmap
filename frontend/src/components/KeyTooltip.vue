@@ -33,8 +33,8 @@ defineProps({ data: Object })
     gap: 16px;
     width: max-content;
     white-space: nowrap;
-    background: rgba(28, 28, 30, 0.85);
-    color: #fff;
+    background: var(--popover);
+    color: var(--popover-text);
     padding: 6px 10px;
     border-radius: 8px;
     font-size: 12px;

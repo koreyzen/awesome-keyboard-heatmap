@@ -8,13 +8,18 @@ export const themes = [
   { name: '紫', rgb: [145, 96, 191] },
 ]
 
-export function heatStyle(rgb, heat) {
+export function heatStyle(rgb, heat, dark = false) {
   // Blend white into a softer theme colour for clean, non-neon shades.
-  const channels = heat === 0 ? [247, 247, 247]
-    : rgb.map(channel => Math.round(255 + (channel - 255) * heat))
+  const channels = dark
+    ? rgb.map((channel, index) => {
+      const base = [54, 54, 58][index]
+      return Math.round(base + (channel * 0.68 - base) * heat)
+    })
+    : heat === 0 ? [247, 247, 247]
+      : rgb.map(channel => Math.round(255 + (channel - 255) * heat))
   return {
     '--t': heat,
     '--heat-color': `rgb(${channels.join(', ')})`,
-    '--key-ink': heat > 0.6 ? '#fff' : '#333',
+    '--key-ink': dark ? '#f2f2f7' : heat > 0.6 ? '#fff' : '#333',
   }
 }

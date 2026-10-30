@@ -1,4 +1,5 @@
 <script setup>
+import { usePreferredDark } from "@vueuse/core";
 import { Events } from "@wailsio/runtime";
 import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import { GetHeatmap, GetKeyLayout, GetPermission, SetMonitorStart, GetMonitorStatus, GetBootStartup, OpenBootStartup, GetPrompt } from "../../bindings/github.com/zxc7563598/key-heat/greetservice";
@@ -7,6 +8,7 @@ import { createKeyboardGeometry } from "../keyboardGeometry.js";
 import { themes, heatStyle } from "../heatColors.js";
 import PromptDialog from "./PromptDialog.vue"
 
+const isDark = usePreferredDark()
 const theme = ref(themes.find(item => item.name === localStorage.getItem('heat-theme')) || themes[0])
 const selectTheme = (item) => {
   theme.value = item
@@ -287,7 +289,7 @@ const startPermissionWatch = () => {
         :class="{ 'split-top': key.Code === '↑', 'split-bottom': key.Code === '↓' }"
         :style="getKeyContentStyle(key)">
         <div class="key" :class="{ active: activeKeys.has(key.Code) }"
-          :style="heatStyle(theme.rgb, heatmapEnabled ? key.Hot : 0)"
+          :style="heatStyle(theme.rgb, heatmapEnabled ? key.Hot : 0, isDark)"
           @mouseenter="onKeyEnter(key)" @mouseleave="onKeyLeave">
           <span v-if="countsEnabled" class="key-count">{{ key.Count }}</span>
           <span v-else class="key-label">
@@ -340,9 +342,9 @@ const startPermissionWatch = () => {
   width: min(100%, calc((100vh - 2 * var(--toolbar-height) - 30px) * var(--keyboard-columns) / var(--keyboard-rows) + 30px));
   padding: 15px;
   border-radius: 24px;
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--panel);
   backdrop-filter: blur(20px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  box-shadow: var(--panel-shadow);
   margin: 0 auto;
 }
 
@@ -377,7 +379,7 @@ const startPermissionWatch = () => {
   font-weight: 500;
   background: var(--heat-color);
   color: var(--key-ink);
-  box-shadow: 3px 3px 6px rgba(0, 0, 0, calc(0.08 + var(--t) * 0.12)), -3px -3px 6px rgba(255, 255, 255, calc(0.9 - var(--t) * 0.7));
+  box-shadow: var(--key-shadow);
   transition: transform 0.08s ease, box-shadow 0.12s ease, background 0.2s ease, color 0.2s ease;
 }
 
@@ -401,7 +403,7 @@ const startPermissionWatch = () => {
 .key:active,
 .key.active {
   transform: translateY(2px) scale(0.96) !important;
-  box-shadow: inset 2px 2px 5px rgba(0, 0, 0, calc(0.15 + var(--t) * 0.2)), inset -2px -2px 5px rgba(255, 255, 255, calc(0.8 - var(--t) * 0.6)) !important;
+  box-shadow: var(--key-pressed-shadow) !important;
 }
 
 /* One keycap outline, with two independently coloured and interactive halves. */
@@ -413,7 +415,7 @@ const startPermissionWatch = () => {
   width: calc(100% - 2 * var(--key-gap));
   height: calc(200% - 2 * var(--key-gap));
   border-radius: 10px;
-  box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.08), -3px -3px 6px rgba(255, 255, 255, 0.9);
+  box-shadow: var(--key-shadow);
   pointer-events: none;
 }
 
@@ -450,7 +452,7 @@ const startPermissionWatch = () => {
 .total-count {
   margin-right: 8px;
   font-size: 13px;
-  color: #777;
+  color: var(--secondary-text);
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
@@ -467,9 +469,9 @@ const startPermissionWatch = () => {
 }
 
 .action-btn.selected {
-  color: #111;
-  background: linear-gradient(to bottom, #f7f8fa, #eef0f3);
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 0 rgba(255, 255, 255, 0.8);
+  color: var(--control-hover);
+  background: var(--selected);
+  box-shadow: var(--selected-shadow);
 }
 
 .status-bar {
@@ -498,7 +500,7 @@ const startPermissionWatch = () => {
 
 .label {
   font-size: 13px;
-  color: #777;
+  color: var(--secondary-text);
   letter-spacing: 0.2px;
 }
 
@@ -556,7 +558,7 @@ const startPermissionWatch = () => {
   font-size: 12px;
   color: #fff;
   white-space: nowrap;
-  background: rgba(60, 60, 67, 0.9);
+  background: var(--popover);
   backdrop-filter: blur(8px);
   opacity: 0;
   pointer-events: none;
@@ -570,7 +572,7 @@ const startPermissionWatch = () => {
   left: 50%;
   transform: translateX(-50%);
   border: 5px solid transparent;
-  border-bottom-color: rgba(60, 60, 67, 0.9);
+  border-bottom-color: var(--popover);
 }
 
 .dot-wrapper:hover .tooltip-status {
@@ -599,7 +601,7 @@ const startPermissionWatch = () => {
   border: 0;
   border-radius: 3px;
   background: var(--swatch);
-  opacity: 0.12;
+  opacity: var(--swatch-opacity);
   cursor: pointer;
   transition: opacity 0.3s ease;
 }
@@ -622,15 +624,15 @@ const startPermissionWatch = () => {
   border-radius: 999px;
   font-size: 13px;
   cursor: pointer;
-  background: #ffffff;
-  color: #444;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  background: var(--control);
+  color: var(--control-text);
+  box-shadow: var(--control-shadow);
   transition: all 0.2s ease;
 }
 
 .action-btn:hover {
   transform: translateY(-0.5px);
-  color: #111;
+  color: var(--control-hover);
 }
 
 .action-btn:active {
@@ -638,7 +640,7 @@ const startPermissionWatch = () => {
 }
 
 .action-btn.primary {
-  color: #1a7f37;
+  color: var(--positive);
 }
 
 </style>
