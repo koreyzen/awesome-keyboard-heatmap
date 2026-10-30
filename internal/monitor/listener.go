@@ -10,19 +10,23 @@ import (
 )
 
 type KeyEventListener struct {
-	keyChan  chan<- string
-	stopChan chan struct{}
-	mapper   keymap.KeyMapper
-	once     sync.Once
-	app      *application.App
+	keyChan         chan<- string
+	stopChan        chan struct{}
+	mapper          keymap.KeyMapper
+	once            sync.Once
+	emitKey         func(string, string)
+	isWindowVisible func() bool
 }
 
-func NewKeyEventListener(keyChan chan<- string, app *application.App) *KeyEventListener {
+func NewKeyEventListener(keyChan chan<- string, app *application.App, isWindowVisible func() bool) *KeyEventListener {
 	return &KeyEventListener{
 		keyChan:  keyChan,
 		stopChan: make(chan struct{}),
 		mapper:   keymap.GetGlobalMapper(),
-		app:      app,
+		emitKey: func(key, kind string) {
+			app.Event.Emit("key:pressed", map[string]any{"key": key, "type": kind})
+		},
+		isWindowVisible: isWindowVisible,
 	}
 }
 
@@ -42,28 +46,28 @@ func (l *KeyEventListener) Start() error {
 				log.Println("键盘事件通道关闭")
 				return nil
 			}
-			if ev.Kind == hook.KeyDown {
-				keyName := l.mapper.Normalize(ev.Rawcode)
-				l.app.Event.Emit("key:pressed", map[string]any{
-					"key":  keyName,
-					"raw":  ev.Rawcode,
-					"type": "down",
-				})
-				select {
-				case l.keyChan <- keyName:
-				default:
-					log.Printf("通道满，丢弃: %s", keyName)
-				}
-			}
-			if ev.Kind == hook.KeyUp {
-				keyName := l.mapper.Normalize(ev.Rawcode)
-				l.app.Event.Emit("key:pressed", map[string]any{
-					"key":  keyName,
-					"raw":  ev.Rawcode,
-					"type": "up",
-				})
-			}
+			l.handleEvent(ev)
 		}
+	}
+}
+
+// Count every keydown; animation delivery is only needed for a visible window.
+func (l *KeyEventListener) handleEvent(ev hook.Event) {
+	if ev.Kind != hook.KeyDown && ev.Kind != hook.KeyUp {
+		return
+	}
+	key := l.mapper.Normalize(ev.Rawcode)
+	kind := "up"
+	if ev.Kind == hook.KeyDown {
+		kind = "down"
+		select {
+		case l.keyChan <- key:
+		default:
+			log.Printf("通道满，丢弃: %s", key)
+		}
+	}
+	if l.isWindowVisible() {
+		l.emitKey(key, kind)
 	}
 }
 

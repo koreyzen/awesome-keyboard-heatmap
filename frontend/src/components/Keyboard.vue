@@ -150,6 +150,12 @@ const getPrompt = () => {
 }
 
 const layout = ref([])
+// Press animations reuse geometry and colours until layout, statistics or appearance changes.
+const renderedKeys = computed(() => layout.value.map(key => ({
+  key,
+  positionStyle: getKeyContentStyle(key),
+  colorStyle: heatStyle(theme.value.rgb, heatmapEnabled.value ? key.Hot : 0, isDark.value),
+})))
 let stopStatsRefresh
 const refreshVisibleStats = () => {
   if (document.visibilityState === 'visible') {
@@ -285,11 +291,11 @@ const startPermissionWatch = () => {
   </div>
   <div class="keyboard" :style="{ '--keyboard-columns': geometry.columns, '--keyboard-rows': geometry.rows }">
     <div class="key-grid">
-      <div v-for="key in layout" :key="key.Code" class="key-content"
+      <div v-for="{ key, positionStyle, colorStyle } in renderedKeys" :key="key.Code" class="key-content"
         :class="{ 'split-top': key.Code === '↑', 'split-bottom': key.Code === '↓' }"
-        :style="getKeyContentStyle(key)">
+        :style="positionStyle">
         <div class="key" :class="{ active: activeKeys.has(key.Code) }"
-          :style="heatStyle(theme.rgb, heatmapEnabled ? key.Hot : 0, isDark)"
+          :style="colorStyle"
           @mouseenter="onKeyEnter(key)" @mouseleave="onKeyLeave">
           <span v-if="countsEnabled" class="key-count">{{ key.Count }}</span>
           <span v-else class="key-label">

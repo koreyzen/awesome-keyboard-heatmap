@@ -22,7 +22,7 @@ type Repository interface {
 	GetStatsByDate(date string) (map[string]int, error)
 	GetStatsByDateRange(startDate, endDate string) (map[string]int, error)
 	GetKeyHistory(keyName, startDate, endDate string) (map[string]int, error)
-	UpsertKeyCount(date, keyName string, delta int) error
+	UpsertKeyCounts(date string, counts map[string]int) error
 }
 
 // GetStatsByDate 获取指定日期的所有按键统计
@@ -74,18 +74,16 @@ func (r *gormRepo) GetKeyHistory(keyName, startDate, endDate string) (map[string
 	return result, nil
 }
 
-// UpsertKeyCount 更新或插入统计
-func (r *gormRepo) UpsertKeyCount(date, keyName string, delta int) error {
-	stat := model.KeyEvent{
-		Date:    date,
-		KeyName: keyName,
-		Count:   delta,
+// UpsertKeyCounts 将同一批按键增量在一次事务中写入。
+func (r *gormRepo) UpsertKeyCounts(date string, counts map[string]int) error {
+	stats := make([]model.KeyEvent, 0, len(counts))
+	for key, count := range counts {
+		stats = append(stats, model.KeyEvent{Date: date, KeyName: key, Count: count})
 	}
-	// Clauses 实现 SQLite 的 INSERT ... ON CONFLICT DO UPDATE
-	return r.db.Clauses(clause.OnConflict{
-		Columns: []clause.Column{{Name: "date"}, {Name: "key_name"}},
-		DoUpdates: clause.Assignments(map[string]any{
-			"count": gorm.Expr("count + ?", delta),
-		}),
-	}).Create(&stat).Error
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		return tx.Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "date"}, {Name: "key_name"}},
+			DoUpdates: clause.Assignments(map[string]any{"count": gorm.Expr("key_events.count + excluded.count")}),
+		}).Create(&stats).Error
+	})
 }

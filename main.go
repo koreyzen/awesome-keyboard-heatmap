@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strconv"
+	"sync/atomic"
 	"syscall"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
@@ -22,11 +23,13 @@ import (
 var assets embed.FS
 
 type KeyboardApp struct {
-	app      *application.App
-	window   *application.WebviewWindow
-	repo     storage.Repository
-	mon      *monitor.Monitor
-	isActive bool
+	app           *application.App
+	window        *application.WebviewWindow
+	repo          storage.Repository
+	mon           *monitor.Monitor
+	isActive      bool
+	windowVisible atomic.Bool
+	appHidden     atomic.Bool
 }
 
 func main() {
@@ -80,15 +83,14 @@ func main() {
 
 // 系统构建核心逻辑
 func (t *KeyboardApp) setup() {
+	t.openWindow()
 	t.isActive = false
 	if permissions.HasAccessibilityPermission() {
 		t.isActive = true
-		t.mon = monitor.NewMonitor(t.repo, nil, t.app)
+		t.mon = monitor.NewMonitor(t.repo, nil, t.app, t.windowVisible.Load)
 		go t.mon.Start()
 	}
 	t.app.Event.Emit("active:switch", t.isActive)
-	// 打开窗口
-	t.openWindow()
 }
 
 // 打开窗口
@@ -106,6 +108,17 @@ func (t *KeyboardApp) openWindow() {
 		BackgroundColour: application.NewRGB(27, 38, 54),
 		URL:              "/",
 	})
+	t.windowVisible.Store(true)
+	visibilityChanged := func(*application.WindowEvent) { t.refreshWindowVisibility() }
+	windowEvents := []events.WindowEventType{events.Common.WindowShow, events.Common.WindowHide, events.Common.WindowMinimise, events.Common.WindowRestore}
+	if runtime.GOOS == "darwin" {
+		windowEvents = []events.WindowEventType{events.Mac.WindowShow, events.Mac.WindowHide, events.Mac.WindowDidMiniaturize, events.Mac.WindowDidDeminiaturize}
+		t.app.Event.OnApplicationEvent(events.Mac.ApplicationDidHide, func(*application.ApplicationEvent) { t.appHidden.Store(true); t.windowVisible.Store(false) })
+		t.app.Event.OnApplicationEvent(events.Mac.ApplicationDidUnhide, func(*application.ApplicationEvent) { t.appHidden.Store(false); t.refreshWindowVisibility() })
+	}
+	for _, event := range windowEvents {
+		t.window.OnWindowEvent(event, visibilityChanged)
+	}
 	if runtime.GOOS == "darwin" {
 		// Keep the window available for reopening from the Dock while counting continues.
 		t.window.RegisterHook(events.Common.WindowClosing, func(e *application.WindowEvent) {
@@ -115,11 +128,15 @@ func (t *KeyboardApp) openWindow() {
 	}
 }
 
+func (t *KeyboardApp) refreshWindowVisibility() {
+	t.windowVisible.Store(!t.appHidden.Load() && t.window.IsVisible() && !t.window.IsMinimised())
+}
+
 // 开启监听
 func (t *KeyboardApp) startListening() {
 	log.Println("startListening开始调用")
 	if permissions.HasAccessibilityPermission() {
-		t.mon = monitor.NewMonitor(t.repo, nil, t.app)
+		t.mon = monitor.NewMonitor(t.repo, nil, t.app, t.windowVisible.Load)
 		go t.mon.Start()
 		t.isActive = true
 		t.app.Event.Emit("active:switch", t.isActive)

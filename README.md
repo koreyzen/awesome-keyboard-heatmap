@@ -11,7 +11,7 @@
 
 ## 下载安装
 
-[下载 macOS 通用安装包](https://github.com/koreyzen/keyboard-heatmap/releases/latest/download/Keyboard-Heatmap-v1.1.0-macOS-universal.zip) · [查看版本说明](https://github.com/koreyzen/keyboard-heatmap/releases/latest)
+[下载 macOS 通用安装包](https://github.com/koreyzen/keyboard-heatmap/releases/latest/download/Keyboard-Heatmap-v1.1.1-macOS-universal.zip) · [查看版本说明](https://github.com/koreyzen/keyboard-heatmap/releases/latest)
 
 安装包同时支持 Apple 芯片和 Intel Mac。
 
@@ -65,7 +65,7 @@ MacBook Pro 风格的紧凑 ANSI 配列采用统一键宽比例，配合苹方�
 
 按键数据以「日期 + 按键名称 + 次数」聚合，保存在本机 SQLite 中，不保存输入文本或按键顺序。主题偏好也保存在本机，切换主题无需查询数据库。
 
-沿用原工程每 10 秒或累计 500 次按键批量写入的方式。界面总计为当前配列内各键次数之和；外接键盘独有的按键不计入这张配列的总计。
+每 10 秒或累计 500 次按键合并为一个批次，在一次数据库事务中提交。窗口隐藏或最小化时继续计数，暂停按键动画通知。界面总计为当前配列内各键次数之和；外接键盘独有的按键不计入这张配列的总计。
 
 macOS 数据文件位于：
 

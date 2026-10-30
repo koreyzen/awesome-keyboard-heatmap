@@ -36,7 +36,7 @@ type Monitor struct {
 	app       *application.App
 }
 
-func NewMonitor(repo storage.Repository, cfg *Config, app *application.App) *Monitor {
+func NewMonitor(repo storage.Repository, cfg *Config, app *application.App, isWindowVisible func() bool) *Monitor {
 	if cfg == nil {
 		cfg = DefaultConfig()
 	}
@@ -49,7 +49,7 @@ func NewMonitor(repo storage.Repository, cfg *Config, app *application.App) *Mon
 		stopChan:  make(chan struct{}),
 		app:       app,
 	}
-	m.listener = NewKeyEventListener(m.keyChan, app)
+	m.listener = NewKeyEventListener(m.keyChan, app, isWindowVisible)
 	return m
 }
 
@@ -126,12 +126,13 @@ func (m *Monitor) flush() {
 	if total == 0 {
 		return
 	}
-	for keyName, delta := range counts {
-		if err := m.repo.UpsertKeyCount(date, keyName, delta); err != nil {
-			log.Printf("写入失败 key=%s count=%d err=%v", keyName, delta, err)
-		}
+	if err := m.repo.UpsertKeyCounts(date, counts); err != nil {
+		log.Printf("写入批次失败 date=%s count=%d err=%v", date, total, err)
+		return
 	}
-	m.app.Event.Emit("stats:updated")
+	if m.listener.isWindowVisible() {
+		m.app.Event.Emit("stats:updated")
+	}
 }
 
 // 停止监听
