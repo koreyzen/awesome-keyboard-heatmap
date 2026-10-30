@@ -47,6 +47,7 @@ func NewMonitor(repo storage.Repository, cfg *Config, app *application.App) *Mon
 		keyChan:   make(chan string, cfg.KeyChanSize),
 		flushChan: make(chan struct{}, 1),
 		stopChan:  make(chan struct{}),
+		app:       app,
 	}
 	m.listener = NewKeyEventListener(m.keyChan, app)
 	return m
@@ -130,6 +131,7 @@ func (m *Monitor) flush() {
 			log.Printf("写入失败 key=%s count=%d err=%v", keyName, delta, err)
 		}
 	}
+	m.app.Event.Emit("stats:updated")
 }
 
 // 停止监听

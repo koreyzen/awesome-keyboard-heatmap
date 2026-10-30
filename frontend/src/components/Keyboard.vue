@@ -95,23 +95,18 @@ const dateRange = (range) => {
   const format = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
   return [format(start), format(end)]
 }
-const initialRange = dateRange(selectedRange.value)
-const startDate = ref(initialRange[0])
-const endDate = ref(initialRange[1])
 const selectRange = (range) => {
   selectedRange.value = range
-  ;[startDate.value, endDate.value] = dateRange(range)
   applyRange()
 }
 const applyRange = () => {
-  const start = startDate.value;
-  const end = endDate.value;
+  const [start, end] = dateRange(selectedRange.value)
   GetHeatmap(start, end).then(async (result) => {
     // 找最大值
     const values = Object.values(result)
     const max = Math.max(...values, 0)
     // 映射 + 写回
-    layout.value = layout.value.map(key => {
+    layout.value.forEach(key => {
       const raw = result[key.Code] || 0
       const t = ref(0)
       if (raw != 0) {
@@ -119,11 +114,10 @@ const applyRange = () => {
         const normalized = Math.pow(logVal, 1) // 再轻微调整分布
         t.value = Math.pow(normalized, 1.4) // 视觉映射
       }
-      return {
-        ...key,
+      Object.assign(key, {
         Hot: t.value,
         Count: raw
-      }
+      })
     })
   }).catch((err) => {
     console.log("热力图获取失败", err)
@@ -144,8 +138,7 @@ const showDialog = ref(false)
 const promptText = ref("")
 
 const getPrompt = () => {
-  const start = startDate.value
-  const end = endDate.value
+  const [start, end] = dateRange(selectedRange.value)
   GetPrompt(start, end).then((result) => {
     promptText.value = result
     showDialog.value = true
@@ -155,7 +148,18 @@ const getPrompt = () => {
 }
 
 const layout = ref([])
+let stopStatsRefresh
+const refreshVisibleStats = () => {
+  if (document.visibilityState === 'visible') {
+    applyRange()
+  }
+}
+const handleFocus = () => {
+  checkPermission()
+  refreshVisibleStats()
+}
 onMounted(async () => {
+  stopStatsRefresh = Events.On('stats:updated', refreshVisibleStats)
   // 获取键盘布局
   GetKeyLayout("ANSI").then(async (result) => {
     const positioned = createKeyboardGeometry(result)
@@ -182,18 +186,17 @@ onMounted(async () => {
   })
   // 检查权限
   await checkPermission()
-  document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") {
-      checkPermission()
-    }
-  })
-  window.addEventListener("focus", checkPermission)
+  document.addEventListener("visibilitychange", handleFocus)
+  window.addEventListener("focus", handleFocus)
   if (!permission.value) {
     startPermissionWatch()
   }
 })
 
 onBeforeUnmount(() => {
+  stopStatsRefresh?.()
+  document.removeEventListener("visibilitychange", handleFocus)
+  window.removeEventListener("focus", handleFocus)
   window.removeEventListener("blur", handleBlur)
 })
 
