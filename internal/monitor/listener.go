@@ -2,19 +2,32 @@ package monitor
 
 import (
 	"log"
+	"runtime"
 	"sync"
+	"sync/atomic"
 
 	hook "github.com/robotn/gohook"
 	"github.com/wailsapp/wails/v3/pkg/application"
 	"github.com/zxc7563598/key-heat/pkg/keymap"
 )
 
+// A process-wide revision also stays ordered when monitoring is restarted.
+var keyStateRevision atomic.Uint64
+
+type KeyState struct {
+	Sequence  uint64   `json:"sequence"`
+	Pressed   []string `json:"pressed"`
+	CapsPulse uint64   `json:"capsPulse"`
+}
+
 type KeyEventListener struct {
 	keyChan         chan<- string
 	stopChan        chan struct{}
 	mapper          keymap.KeyMapper
 	once            sync.Once
-	emitKey         func(string, string)
+	emitKey         func(KeyState)
+	pressed         map[string]struct{}
+	capsPulse       uint64
 	isWindowVisible func() bool
 }
 
@@ -23,8 +36,9 @@ func NewKeyEventListener(keyChan chan<- string, app *application.App, isWindowVi
 		keyChan:  keyChan,
 		stopChan: make(chan struct{}),
 		mapper:   keymap.GetGlobalMapper(),
-		emitKey: func(key, kind string) {
-			app.Event.Emit("key:pressed", map[string]any{"key": key, "type": kind})
+		pressed:  make(map[string]struct{}),
+		emitKey: func(state KeyState) {
+			app.Event.Emit("key:state", state)
 		},
 		isWindowVisible: isWindowVisible,
 	}
@@ -51,24 +65,40 @@ func (l *KeyEventListener) Start() error {
 	}
 }
 
-// Count every keydown; animation delivery is only needed for a visible window.
+// macOS reports Caps Lock toggles, rather than a physical down/up pair.
+// Keep those toggles out of the held-key set and count each one as a tap.
 func (l *KeyEventListener) handleEvent(ev hook.Event) {
 	if ev.Kind != hook.KeyDown && ev.Kind != hook.KeyUp {
 		return
 	}
 	key := l.mapper.Normalize(ev.Rawcode)
-	kind := "up"
-	if ev.Kind == hook.KeyDown {
-		kind = "down"
+	capsTap := runtime.GOOS == "darwin" && key == keymap.Key_CapsLock
+	if ev.Kind == hook.KeyDown || capsTap {
 		select {
 		case l.keyChan <- key:
 		default:
 			log.Printf("通道满，丢弃: %s", key)
 		}
 	}
-	if l.isWindowVisible() {
-		l.emitKey(key, kind)
+	if !capsTap {
+		if ev.Kind == hook.KeyDown {
+			l.pressed[key] = struct{}{}
+		} else {
+			delete(l.pressed, key)
+		}
 	}
+	if !l.isWindowVisible() {
+		return
+	}
+	sequence := keyStateRevision.Add(1)
+	if capsTap {
+		l.capsPulse = sequence
+	}
+	pressed := make([]string, 0, len(l.pressed))
+	for key := range l.pressed {
+		pressed = append(pressed, key)
+	}
+	l.emitKey(KeyState{Sequence: sequence, Pressed: pressed, CapsPulse: l.capsPulse})
 }
 
 // 停止监听

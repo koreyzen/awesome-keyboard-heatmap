@@ -49,6 +49,8 @@ const openBootStartup = () => {
 
 // 按键按压状态
 const activeKeys = ref(new Set())
+const capsPulse = ref(0)
+let keyStateSequence = 0
 const handleBlur = () => {
   activeKeys.value = new Set()
 }
@@ -156,6 +158,7 @@ const renderedKeys = computed(() => layout.value.map(key => ({
   positionStyle: getKeyContentStyle(key),
   colorStyle: heatStyle(theme.value.rgb, heatmapEnabled.value ? key.Hot : 0, isDark.value),
 })))
+let stopKeyState
 let stopStatsRefresh
 const refreshVisibleStats = () => {
   if (document.visibilityState === 'visible') {
@@ -179,15 +182,12 @@ onMounted(async () => {
     console.log(err)
   })
   // 键盘事件监听
-  Events.On("key:pressed", (event) => {
-    const { key, type } = event.data
-    const next = new Set(activeKeys.value)
-    if (type === "down") {
-      next.add(key)
-    } else if (type === "up") {
-      next.delete(key)
-    }
-    activeKeys.value = next
+  stopKeyState = Events.On("key:state", (event) => {
+    const { sequence, pressed, capsPulse: pulse } = event.data
+    if (sequence <= keyStateSequence) return
+    keyStateSequence = sequence
+    activeKeys.value = new Set(pressed)
+    capsPulse.value = pulse
   })
   Events.On("active:switch", (event) => {
     monitor.value = event.data
@@ -203,6 +203,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   stopStatsRefresh?.()
+  stopKeyState?.()
   document.removeEventListener("visibilitychange", handleFocus)
   window.removeEventListener("focus", handleFocus)
   window.removeEventListener("blur", handleBlur)
@@ -291,10 +292,10 @@ const startPermissionWatch = () => {
   </div>
   <div class="keyboard" :style="{ '--keyboard-columns': geometry.columns, '--keyboard-rows': geometry.rows }">
     <div class="key-grid">
-      <div v-for="{ key, positionStyle, colorStyle } in renderedKeys" :key="key.Code" class="key-content"
+      <div v-for="{ key, positionStyle, colorStyle } in renderedKeys" :key="key.Code === 'CapsLock' ? `CapsLock-${capsPulse}` : key.Code" class="key-content"
         :class="{ 'split-top': key.Code === '↑', 'split-bottom': key.Code === '↓' }"
         :style="positionStyle">
-        <div class="key" :class="{ active: activeKeys.has(key.Code) }"
+        <div class="key" :class="{ active: activeKeys.has(key.Code), 'caps-pulse': key.Code === 'CapsLock' && capsPulse > 0 }"
           :style="colorStyle"
           @mouseenter="onKeyEnter(key)" @mouseleave="onKeyLeave">
           <span v-if="countsEnabled" class="key-count">{{ key.Count }}</span>
@@ -408,8 +409,23 @@ const startPermissionWatch = () => {
 
 .key:active,
 .key.active {
-  transform: translateY(2px) scale(0.96) !important;
+  transform: translateY(2px) !important;
   box-shadow: var(--key-pressed-shadow) !important;
+}
+
+.key.caps-pulse {
+  animation: caps-tap 0.14s ease-out;
+}
+
+@keyframes caps-tap {
+  0%, 45% {
+    transform: translateY(2px);
+    box-shadow: var(--key-pressed-shadow);
+  }
+  100% {
+    transform: translateY(0);
+    box-shadow: var(--key-shadow);
+  }
 }
 
 /* One keycap outline, with two independently coloured and interactive halves. */
